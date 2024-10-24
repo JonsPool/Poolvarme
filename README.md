@@ -35,6 +35,8 @@ and German market prices - see their <a href="https://awattar.at" target="_blank
 
 ## Installation
 
+Before you start the installation process, make sure that you have the latest version of the Shelly firmware installed (you can review the firmware status via `Settings`/`Firmware`).
+
 <ol>
 <li>Enter the IP Address of your Shelly in the URL field of your browser.</li>
 <li>Select the <code>Scripts</code> Tab.</li>
