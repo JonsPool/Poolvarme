@@ -1,4 +1,4 @@
-// Spotelly Version 1.1
+// Spotelly Version 1.2
 // This script uses EPEX spot hourly energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
 
@@ -54,15 +54,9 @@ function setPowerSwitch(value) {
   });
 }
 
-function findHour(start, hour) {
-  let timestamp = start - (start % 3600000) + 3600000;
-  for (let i = 0; i < 25; i++) {
-    if (new Date(timestamp).getHours() === hour) {
-      break;
-    }
-    timestamp += 3600000;
-  }
-  return timestamp;
+function getDuration(startHour, endHour) {
+  let hours = endHour - startHour;
+  return (hours + (hours < 1) * 24) * 3600000;
 }
 
 function formatDate(timestamp) {
@@ -131,8 +125,9 @@ function setTimers(response) {
 
 // eslint-disable-next-line no-unused-vars
 function calculate() {
-  let start = findHour(Date.now(), timeWindowStartHour);
-  let end = findHour(start, timeWindowEndHour);
+  let now = Date.now();
+  let start = now - (now % 3600000) + getDuration(new Date(now).getHours(), timeWindowStartHour);
+  let end = start + getDuration(timeWindowStartHour, timeWindowEndHour);
 
   print(
     JSON.stringify({
