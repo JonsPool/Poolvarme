@@ -1,10 +1,10 @@
-// Spotelly Version 1.2
+// Spotelly Version 1.3
 // This script uses EPEX spot hourly energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
 
 // <<<<< START OF CONFIGURATION - change values below to your preference >>>>>
 
-let awattarCountry = "at"; // at for Austrian or de for German API
+let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
 let scheduleTimeSpec = "0 0 15 * * *"; // the schedule for the script execution
 
@@ -75,23 +75,23 @@ function formatDate(timestamp) {
 }
 
 function setTimers(response) {
-  let prices = JSON.parse(response.body).data;
+  let data = JSON.parse(response.body);
 
-  let switchOn = 0;
-  let switchOff = 0;
+  let startIndex = 0;
   let lowestSum = Infinity;
-  for (let i = 0, j = switchOnDuration; j <= prices.length; i++, j++) {
-    let slice = prices.slice(i, j);
+  for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
     let sliceSum = 0;
-    slice.forEach(function (ele) {
-      sliceSum += ele.marketprice;
+    data.price.slice(i, j).forEach(function (price) {
+      sliceSum += price;
     });
     if (sliceSum < lowestSum) {
-      switchOn = slice[0].start_timestamp;
-      switchOff = slice[slice.length - 1].end_timestamp;
+      startIndex = i;
       lowestSum = sliceSum;
     }
   }
+
+  let switchOn = data.unix_seconds[startIndex] * 1000;
+  let switchOff = switchOn + switchOnDuration * 3600000;
 
   let centPerKWH = lowestSum / 10 / switchOnDuration;
 
@@ -145,7 +145,12 @@ function calculate() {
     "http.get",
     {
       url:
-        "https://api.awattar." + awattarCountry + "/v1/marketdata?start=" + start + "&end=" + end,
+        "https://api.energy-charts.info/price?bzn=" +
+        epexBZN +
+        "&start=" +
+        start / 1000 +
+        "&end=" +
+        (end / 1000 - 3600), // do not include last hour
     },
     setTimers,
   );
