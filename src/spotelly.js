@@ -74,53 +74,68 @@ function formatDate(timestamp) {
   ].join("");
 }
 
-function setTimers(response) {
-  let data = JSON.parse(response.body);
+function fetchPrices(window) {
+  Shelly.call(
+    "http.get",
+    {
+      url:
+        "https://api.energy-charts.info/price?bzn=" +
+        epexBZN +
+        "&start=" +
+        window.start / 1000 +
+        "&end=" +
+        (window.end / 1000 - 3600), // do not include last hour
+    },
 
-  let startIndex = 0;
-  let lowestSum = Infinity;
-  for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
-    let sliceSum = 0;
-    data.price.slice(i, j).forEach(function (price) {
-      sliceSum += price;
-    });
-    if (sliceSum < lowestSum) {
-      startIndex = i;
-      lowestSum = sliceSum;
-    }
-  }
+    function (response) {
+      let data = JSON.parse(response.body);
 
-  let switchOn = data.unix_seconds[startIndex] * 1000;
-  let switchOff = switchOn + switchOnDuration * 3600000;
+      let startIndex = 0;
+      let lowestSum = Infinity;
+      for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
+        let sliceSum = 0;
+        data.price.slice(i, j).forEach(function (price) {
+          sliceSum += price;
+        });
+        if (sliceSum < lowestSum) {
+          startIndex = i;
+          lowestSum = sliceSum;
+        }
+      }
 
-  let centPerKWH = lowestSum / 10 / switchOnDuration;
+      let switchOn = data.unix_seconds[startIndex] * 1000;
+      let switchOff = switchOn + switchOnDuration * 3600000;
 
-  if (centPerKWH > priceLimit) {
-    let message = [
-      "Der günstigste Durchschnittspreis beträgt",
-      centPerKWH.toFixed(2),
-      "cent/kWh und liegt über dem Schwellenwert von",
-      priceLimit.toFixed(2),
-      "cent/kWh. Die Stromzufuhr wird im aktuellen Zeitfenster nicht eingeschaltet.",
-    ].join(" ");
-    logAndNotify(message, sendSchedule, kvsPlanKey);
-    return;
-  }
+      let centPerKWH = lowestSum / 10 / switchOnDuration;
 
-  let message = [
-    "Die Stromzufuhr wird",
-    formatDate(switchOn),
-    "ein- und",
-    formatDate(switchOff),
-    "ausgeschaltet. Der durchschnittliche Marktpreis ist",
-    centPerKWH.toFixed(2),
-    "cent/kWh.",
-  ].join(" ");
-  logAndNotify(message, sendSchedule, kvsPlanKey);
+      if (centPerKWH > priceLimit) {
+        let message = [
+          "Der günstigste Durchschnittspreis beträgt",
+          centPerKWH.toFixed(2),
+          "cent/kWh und liegt über dem Schwellenwert von",
+          priceLimit.toFixed(2),
+          "cent/kWh. Die Stromzufuhr wird im aktuellen Zeitfenster nicht eingeschaltet.",
+        ].join(" ");
+        logAndNotify(message, sendSchedule, kvsPlanKey);
+        return;
+      }
 
-  let now = Date.now();
-  Timer.set(switchOn - now, false, setPowerSwitch, true);
-  Timer.set(switchOff - now, false, setPowerSwitch, false);
+      let message = [
+        "Die Stromzufuhr wird",
+        formatDate(switchOn),
+        "ein- und",
+        formatDate(switchOff),
+        "ausgeschaltet. Der durchschnittliche Marktpreis ist",
+        centPerKWH.toFixed(2),
+        "cent/kWh.",
+      ].join(" ");
+      logAndNotify(message, sendSchedule, kvsPlanKey);
+
+      let now = Date.now();
+      Timer.set(switchOn - now, false, setPowerSwitch, true);
+      Timer.set(switchOff - now, false, setPowerSwitch, false);
+    },
+  );
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -142,22 +157,6 @@ function calculate() {
   );
 
   fetchPrices({ start: start, end: end });
-}
-
-function fetchPrices(window) {
-  Shelly.call(
-    "http.get",
-    {
-      url:
-        "https://api.energy-charts.info/price?bzn=" +
-        epexBZN +
-        "&start=" +
-        window.start / 1000 +
-        "&end=" +
-        (window.end / 1000 - 3600), // do not include last hour
-    },
-    setTimers,
-  );
 }
 
 function createOrUpdateSchedule() {
