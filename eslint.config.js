@@ -8,7 +8,7 @@ export default [
       "func-names": ["error", "never"],
       "func-style": ["error", "declaration"],
       "no-unused-vars": "error",
-      "no-use-before-define": "error",
+      "no-use-before-define": ["error", { functions: false }],
       "no-var": "error",
     },
   },

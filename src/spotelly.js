@@ -141,6 +141,10 @@ function calculate() {
     }),
   );
 
+  fetchPrices({ start: start, end: end });
+}
+
+function fetchPrices(window) {
   Shelly.call(
     "http.get",
     {
@@ -148,9 +152,9 @@ function calculate() {
         "https://api.energy-charts.info/price?bzn=" +
         epexBZN +
         "&start=" +
-        start / 1000 +
+        window.start / 1000 +
         "&end=" +
-        (end / 1000 - 3600), // do not include last hour
+        (window.end / 1000 - 3600), // do not include last hour
     },
     setTimers,
   );
