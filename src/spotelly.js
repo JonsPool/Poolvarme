@@ -87,8 +87,28 @@ function fetchPrices(window) {
         (window.end / 1000 - 3600), // do not include last hour
     },
 
-    function (response) {
-      let data = JSON.parse(response.body);
+    function (response, error_code, error_message) {
+      let data;
+
+      let success = true;
+      if (error_code !== 0) {
+        print("API call failed with error " + error_code + " (" + error_message + ").");
+        success = false;
+      } else if (response.code !== 200) {
+        print("API server responded with " + response.code + " (" + response.message + ").");
+        success = false;
+      } else {
+        data = JSON.parse(response.body);
+        let expectedRecords = (window.end - window.start) / 3600000;
+        if (data.price.length !== expectedRecords) {
+          print("Retrieved " + data.price.length + " records; expected " + expectedRecords + ".");
+          success = false;
+        }
+      }
+
+      if (!success) {
+        return;
+      }
 
       let startIndex = 0;
       let lowestSum = Infinity;
