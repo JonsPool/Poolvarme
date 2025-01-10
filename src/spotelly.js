@@ -107,6 +107,10 @@ function fetchPrices(window) {
       }
 
       if (!success) {
+        // try again after 20 to 22 minutes
+        let period = 1200000 + Math.random() * 120000;
+        print("Trying again at " + new Date(Date.now() + period).toString());
+        Timer.set(period, false, fetchPrices, window);
         return;
       }
 
@@ -176,7 +180,8 @@ function calculate() {
     }),
   );
 
-  fetchPrices({ start: start, end: end });
+  // fetch prices within the next minute (slightly randomized to distribute server load)
+  Timer.set(Math.random() * 60000, false, fetchPrices, { start: start, end: end });
 }
 
 function createOrUpdateSchedule() {
