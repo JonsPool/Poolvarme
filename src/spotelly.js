@@ -6,8 +6,6 @@
 
 let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
-let scheduleTimeSpec = "0 0 15 * * *"; // the schedule for the script execution
-
 let switchOnDuration = 4; // minimum 1, maximum 24
 let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
@@ -27,6 +25,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 let scriptID = Shelly.getCurrentScriptId();
 let kvsPlanKey = "Awattar-Plan-" + JSON.stringify(scriptID);
+let switchSchedule = {};
 
 function logAndNotify(msg, sendTelegram, kvsKey) {
   print(msg);
@@ -155,22 +154,19 @@ function fetchPrices(window) {
       ].join(" ");
       logAndNotify(message, sendSchedule, kvsPlanKey);
 
-      let now = Date.now();
-      Timer.set(switchOn - now, false, setPowerSwitch, true);
-      Timer.set(switchOff - now, false, setPowerSwitch, false);
+      switchSchedule[switchOn] = true;
+      switchSchedule[switchOff] = false;
     },
   );
 }
 
-// eslint-disable-next-line no-unused-vars
-function calculate() {
+function calculateTimeWindow() {
   let now = Date.now();
-  let start = now - (now % 3600000) + getDuration(new Date(now).getHours(), timeWindowStartHour);
+  let thisHour = now - (now % 3600000);
+  let start = thisHour + getDuration(new Date(now).getHours(), timeWindowStartHour);
   let end = start + getDuration(timeWindowStartHour, timeWindowEndHour);
-
   print(
     JSON.stringify({
-      scheduleTimeSpec: scheduleTimeSpec,
       switchOnDuration: switchOnDuration,
       timeWindowStartHour: timeWindowStartHour,
       timeWindowEndHour: timeWindowEndHour,
@@ -179,15 +175,31 @@ function calculate() {
       calculatedEnd: end,
     }),
   );
-
-  // fetch prices within the next minute (slightly randomized to distribute server load)
+  // start time is slightly randomized to spread server load
   Timer.set(Math.random() * 60000, false, fetchPrices, { start: start, end: end });
+}
+
+// eslint-disable-next-line no-unused-vars
+function calculate() {
+  let now = Date.now();
+  let thisHour = now - (now % 3600000);
+
+  if (thisHour in switchSchedule) {
+    setPowerSwitch(switchSchedule[thisHour]);
+    delete switchSchedule[thisHour];
+  }
+
+  // start calculation for next time window at 15:00
+  if (new Date(thisHour).getHours() === 15) {
+    calculateTimeWindow();
+  }
 }
 
 function createOrUpdateSchedule() {
   Shelly.call("Schedule.List", {}, function (result) {
     let scheduleMethod = "Schedule.Update";
     let scheduleObject = null;
+    let scheduleTimeSpec = "0 0 * * * *";
     let code = "calculate()";
 
     for (let job of result.jobs) {

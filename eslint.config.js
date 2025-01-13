@@ -7,6 +7,7 @@ export default [
       eqeqeq: "error",
       "func-names": ["error", "never"],
       "func-style": ["error", "declaration"],
+      "no-shadow": ["error", { builtinGlobals: true }],
       "no-unused-vars": "error",
       "no-use-before-define": ["error", { functions: false }],
       "no-var": "error",
