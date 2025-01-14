@@ -6,6 +6,7 @@
 
 let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
+let blockMode = true; // choose calculation mode
 let switchOnDuration = 4; // minimum 1, maximum 24
 let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
@@ -113,51 +114,87 @@ function fetchPrices(window) {
         return;
       }
 
-      let startIndex = 0;
-      let lowestSum = Infinity;
-      for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
-        let sliceSum = 0;
-        data.price.slice(i, j).forEach(function (price) {
-          sliceSum += price;
-        });
-        if (sliceSum < lowestSum) {
-          startIndex = i;
-          lowestSum = sliceSum;
+      (blockMode ? calculateBlock : calculateNonBlock)(data);
+
+      Object.keys(switchSchedule).forEach(function (key) {
+        let hour = Number(key);
+        let value = switchSchedule[hour];
+        if (value !== null && value > priceLimit) {
+          switchSchedule[hour] = null; // price limit exceeded - set switchoff marker
+        } else if (!(hour + 3600000 in switchSchedule)) {
+          switchSchedule[hour + 3600000] = null; // set switch off indicator if needed
         }
-      }
-
-      let switchOn = data.unix_seconds[startIndex] * 1000;
-      let switchOff = switchOn + switchOnDuration * 3600000;
-
-      let centPerKWH = lowestSum / 10 / switchOnDuration;
-
-      if (centPerKWH > priceLimit) {
-        let message = [
-          "Der günstigste Durchschnittspreis beträgt",
-          centPerKWH.toFixed(2),
-          "cent/kWh und liegt über dem Schwellenwert von",
-          priceLimit.toFixed(2),
-          "cent/kWh. Die Stromzufuhr wird im aktuellen Zeitfenster nicht eingeschaltet.",
-        ].join(" ");
-        logAndNotify(message, sendSchedule, kvsPlanKey);
-        return;
-      }
-
-      let message = [
-        "Die Stromzufuhr wird",
-        formatDate(switchOn),
-        "ein- und",
-        formatDate(switchOff),
-        "ausgeschaltet. Der durchschnittliche Marktpreis ist",
-        centPerKWH.toFixed(2),
-        "cent/kWh.",
-      ].join(" ");
-      logAndNotify(message, sendSchedule, kvsPlanKey);
-
-      switchSchedule[switchOn] = true;
-      switchSchedule[switchOff] = false;
+      });
     },
   );
+}
+
+function calculateBlock(data) {
+  let startIndex = 0;
+  let lowestSum = Infinity;
+  for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
+    let sliceSum = 0;
+    data.price.slice(i, j).forEach(function (price) {
+      sliceSum += price;
+    });
+    if (sliceSum < lowestSum) {
+      startIndex = i;
+      lowestSum = sliceSum;
+    }
+  }
+
+  for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
+    switchSchedule[data.unix_seconds[i] * 1000] = data.price[i] / 10;
+  }
+
+  let switchOn = data.unix_seconds[startIndex] * 1000;
+  let switchOff = switchOn + switchOnDuration * 3600000;
+
+  let centPerKWH = lowestSum / 10 / switchOnDuration;
+
+  if (centPerKWH > priceLimit) {
+    let message = [
+      "Der günstigste Durchschnittspreis beträgt",
+      centPerKWH.toFixed(2),
+      "cent/kWh und liegt über dem Schwellenwert von",
+      priceLimit.toFixed(2),
+      "cent/kWh. Die Stromzufuhr wird im aktuellen Zeitfenster nicht eingeschaltet.",
+    ].join(" ");
+    logAndNotify(message, sendSchedule, kvsPlanKey);
+    return;
+  }
+
+  let message = [
+    "Die Stromzufuhr wird",
+    formatDate(switchOn),
+    "ein- und",
+    formatDate(switchOff),
+    "ausgeschaltet. Der durchschnittliche Marktpreis ist",
+    centPerKWH.toFixed(2),
+    "cent/kWh.",
+  ].join(" ");
+  logAndNotify(message, sendSchedule, kvsPlanKey);
+}
+
+function calculateNonBlock(data) {
+  // do this <switchOnDuration> times:
+  // 1. move the element with the lowest price to the end of both arrays
+  // 2. pop the elements and set switch ON markers
+  let prices = data.price;
+  let timestamps = data.unix_seconds;
+  for (let i = 0; i < switchOnDuration; i++) {
+    for (let j = 1; j < prices.length; j++) {
+      if (prices[j] > prices[j - 1]) {
+        let temp = prices[j];
+        prices[j] = prices[j - 1];
+        prices[j - 1] = temp;
+        temp = timestamps[j];
+        timestamps[j] = timestamps[j - 1];
+        timestamps[j - 1] = temp;
+      }
+    }
+    switchSchedule[timestamps.pop() * 1000] = prices.pop() / 10;
+  }
 }
 
 function calculateTimeWindow() {
@@ -180,12 +217,12 @@ function calculateTimeWindow() {
 }
 
 // eslint-disable-next-line no-unused-vars
-function calculate() {
+function hourly() {
   let now = Date.now();
   let thisHour = now - (now % 3600000);
 
   if (thisHour in switchSchedule) {
-    setPowerSwitch(switchSchedule[thisHour]);
+    setPowerSwitch(switchSchedule[thisHour] !== null);
     delete switchSchedule[thisHour];
   }
 
@@ -200,7 +237,7 @@ function createOrUpdateSchedule() {
     let scheduleMethod = "Schedule.Update";
     let scheduleObject = null;
     let scheduleTimeSpec = "0 0 * * * *";
-    let code = "calculate()";
+    let code = "hourly()";
 
     for (let job of result.jobs) {
       let call = job.calls[0];
