@@ -116,7 +116,7 @@ function fetchPrices(window) {
 
       (blockMode ? calculateBlock : calculateNonBlock)(data);
 
-      Object.keys(switchSchedule).forEach(function (key) {
+      for (let key of Object.keys(switchSchedule)) {
         let hour = Number(key);
         let value = switchSchedule[hour];
         if (value !== null && value > priceLimit) {
@@ -124,7 +124,7 @@ function fetchPrices(window) {
         } else if (!(hour + 3600000 in switchSchedule)) {
           switchSchedule[hour + 3600000] = null; // set switch off indicator if needed
         }
-      });
+      }
     },
   );
 }
