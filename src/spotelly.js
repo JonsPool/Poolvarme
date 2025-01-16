@@ -26,11 +26,11 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 let scriptID = Shelly.getCurrentScriptId();
 let kvsPlanKey = "Awattar-Plan-" + JSON.stringify(scriptID);
-let switchSchedule = {};
+let times = {};
 
 function logAndNotify(msg, sendTelegram, kvsKey) {
   print(msg);
-  if (typeof kvsKey !== "undefined") {
+  if (kvsKey !== undefined) {
     Shelly.call("KVS.Set", { key: kvsKey, value: msg });
   }
   if (telegramActive && sendTelegram) {
@@ -42,14 +42,14 @@ function logAndNotify(msg, sendTelegram, kvsKey) {
   }
 }
 
-function setPowerSwitch(value) {
-  let switchText = value ? "eingeschaltet" : "ausgeschaltet";
-  let messageFlag = value ? sendPowerOn : sendPowerOff;
+function setSwitch(value) {
+  let text = value ? "eingeschaltet" : "ausgeschaltet";
+  let flag = value ? sendPowerOn : sendPowerOff;
   Shelly.call("Switch.Set", { id: 0, on: value }, function (result, error_code) {
     if (error_code !== 0) {
-      logAndNotify("Die Stromzufuhr konnte nicht " + switchText + " werden.", messageFlag);
+      logAndNotify("Die Stromzufuhr konnte nicht " + text + " werden.", flag);
     } else {
-      logAndNotify("Die Stromzufuhr wurde " + switchText + ".", messageFlag);
+      logAndNotify("Die Stromzufuhr wurde " + text + ".", flag);
     }
   });
 }
@@ -87,21 +87,21 @@ function fetchPrices(window) {
         (window.end / 1000 - 3600), // do not include last hour
     },
 
-    function (response, error_code, error_message) {
+    function (res, error_code, error_message) {
       let data;
 
       let success = true;
       if (error_code !== 0) {
         print("API call failed with error " + error_code + " (" + error_message + ").");
         success = false;
-      } else if (response.code !== 200) {
-        print("API server responded with " + response.code + " (" + response.message + ").");
+      } else if (res.code !== 200) {
+        print("API server responded with " + res.code + " (" + res.message + ").");
         success = false;
       } else {
-        data = JSON.parse(response.body);
-        let expectedRecords = (window.end - window.start) / 3600000;
-        if (data.price.length !== expectedRecords) {
-          print("Retrieved " + data.price.length + " records; expected " + expectedRecords + ".");
+        data = JSON.parse(res.body);
+        let expected = (window.end - window.start) / 3600000;
+        if (data.price.length !== expected) {
+          print("Retrieved " + data.price.length + " records; expected " + expected + ".");
           success = false;
         }
       }
@@ -116,13 +116,13 @@ function fetchPrices(window) {
 
       (blockMode ? calculateBlock : calculateNonBlock)(data);
 
-      for (let key of Object.keys(switchSchedule)) {
+      for (let key of Object.keys(times)) {
         let hour = Number(key);
-        let value = switchSchedule[hour];
+        let value = times[hour];
         if (value !== null && value > priceLimit) {
-          switchSchedule[hour] = null; // price limit exceeded - set switchoff marker
-        } else if (!(hour + 3600000 in switchSchedule)) {
-          switchSchedule[hour + 3600000] = null; // set switch off indicator if needed
+          times[hour] = null; // price limit exceeded - set switchoff marker
+        } else if (!(hour + 3600000 in times)) {
+          times[hour + 3600000] = null; // set switch off indicator if needed
         }
       }
     },
@@ -144,7 +144,7 @@ function calculateBlock(data) {
   }
 
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
-    switchSchedule[data.unix_seconds[i] * 1000] = data.price[i] / 10;
+    times[data.unix_seconds[i] * 1000] = data.price[i] / 10;
   }
 
   let switchOn = data.unix_seconds[startIndex] * 1000;
@@ -181,23 +181,24 @@ function calculateNonBlock(data) {
   // 1. move the element with the lowest price to the end of both arrays
   // 2. pop the elements and set switch ON markers
   let prices = data.price;
-  let timestamps = data.unix_seconds;
+  let hours = data.unix_seconds;
+  let temp;
   for (let i = 0; i < switchOnDuration; i++) {
     for (let j = 1; j < prices.length; j++) {
       if (prices[j] > prices[j - 1]) {
-        let temp = prices[j];
+        temp = prices[j];
         prices[j] = prices[j - 1];
         prices[j - 1] = temp;
-        temp = timestamps[j];
-        timestamps[j] = timestamps[j - 1];
-        timestamps[j - 1] = temp;
+        temp = hours[j];
+        hours[j] = hours[j - 1];
+        hours[j - 1] = temp;
       }
     }
-    switchSchedule[timestamps.pop() * 1000] = prices.pop() / 10;
+    times[hours.pop() * 1000] = prices.pop() / 10;
   }
 }
 
-function calculateTimeWindow() {
+function calculateWindow() {
   let now = Date.now();
   let thisHour = now - (now % 3600000);
   let start = thisHour + getDuration(new Date(now).getHours(), timeWindowStartHour);
@@ -221,22 +222,22 @@ function hourly() {
   let now = Date.now();
   let thisHour = now - (now % 3600000);
 
-  if (thisHour in switchSchedule) {
-    setPowerSwitch(switchSchedule[thisHour] !== null);
-    delete switchSchedule[thisHour];
+  if (thisHour in times) {
+    setSwitch(times[thisHour] !== null);
+    delete times[thisHour];
   }
 
   // start calculation for next time window at 15:00
   if (new Date(thisHour).getHours() === 15) {
-    calculateTimeWindow();
+    calculateWindow();
   }
 }
 
-function createOrUpdateSchedule() {
+function startUp() {
   Shelly.call("Schedule.List", {}, function (result) {
-    let scheduleMethod = "Schedule.Update";
-    let scheduleObject = null;
-    let scheduleTimeSpec = "0 0 * * * *";
+    let method = "Schedule.Update";
+    let schedule = null;
+    let timespec = "0 0 * * * *";
     let code = "hourly()";
 
     for (let job of result.jobs) {
@@ -244,28 +245,28 @@ function createOrUpdateSchedule() {
       if (!(call.method.toLowerCase() === "script.eval" && call.params.id === scriptID)) {
         continue; // this is not our schedule - skip
       }
-      if (job.timespec === scheduleTimeSpec && call.params.code === code) {
+      if (job.timespec === timespec && call.params.code === code) {
         return; // this IS our schedule and it matches the configuration - we are done
       }
       print("Schedule has changed.");
-      scheduleObject = job;
-      scheduleObject.timespec = scheduleTimeSpec;
+      schedule = job;
+      schedule.timespec = timespec;
       call.params.code = code;
       break;
     }
 
-    if (scheduleObject === null) {
+    if (schedule === null) {
       // schedule does not exist - create it
-      scheduleMethod = "Schedule.Create";
-      scheduleObject = {
+      method = "Schedule.Create";
+      schedule = {
         enable: true,
-        timespec: scheduleTimeSpec,
+        timespec: timespec,
         calls: [{ method: "Script.Eval", params: { id: scriptID, code: code } }],
       };
     }
 
-    Shelly.call(scheduleMethod, scheduleObject);
+    Shelly.call(method, schedule);
   });
 }
 
-createOrUpdateSchedule();
+startUp();
