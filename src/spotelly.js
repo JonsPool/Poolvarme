@@ -30,15 +30,11 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
 let scriptID = Shelly.getCurrentScriptId();
-let kvsPlanKey = "Awattar-Plan-" + JSON.stringify(scriptID);
 let limit = priceLimit !== Infinity ? priceModifier(priceLimit) : Infinity;
 let times = {};
 
-function logAndNotify(msg, sendTelegram, kvsKey) {
+function logAndNotify(msg, sendTelegram) {
   print(msg);
-  if (kvsKey !== undefined) {
-    Shelly.call("KVS.Set", { key: kvsKey, value: msg });
-  }
   if (telegramActive && sendTelegram) {
     Shelly.call("http.post", {
       url: "https://api.telegram.org/bot" + telegramToken + "/sendMessage",
@@ -63,21 +59,6 @@ function setSwitch(value) {
 function getDuration(startHour, endHour) {
   let hours = endHour - startHour;
   return (hours + (hours < 1) * 24) * 3600000;
-}
-
-function formatDate(timestamp) {
-  let date = new Date(timestamp);
-  return [
-    "am ",
-    date.getDate(),
-    ".",
-    date.getMonth() + 1,
-    ".",
-    date.getFullYear(),
-    " um ",
-    date.getHours(),
-    ":00",
-  ].join("");
 }
 
 function fetchPrices(window) {
@@ -131,6 +112,8 @@ function fetchPrices(window) {
           times[hour + 3600000] = null; // set switch off indicator if needed
         }
       }
+
+      logAndNotify("Calculation successfully finished.", sendSchedule);
     },
   );
 }
@@ -153,34 +136,6 @@ function calculateBlock(data) {
     let price = priceModifier(data.price[i] / 10);
     if (price <= limit) times[data.unix_seconds[i] * 1000] = price;
   }
-
-  let switchOn = data.unix_seconds[startIndex] * 1000;
-  let switchOff = switchOn + switchOnDuration * 3600000;
-
-  let centPerKWH = lowestSum / 10 / switchOnDuration;
-
-  if (centPerKWH > priceLimit) {
-    let message = [
-      "Der günstigste Durchschnittspreis beträgt",
-      centPerKWH.toFixed(2),
-      "cent/kWh und liegt über dem Schwellenwert von",
-      priceLimit.toFixed(2),
-      "cent/kWh. Die Stromzufuhr wird im aktuellen Zeitfenster nicht eingeschaltet.",
-    ].join(" ");
-    logAndNotify(message, sendSchedule, kvsPlanKey);
-    return;
-  }
-
-  let message = [
-    "Die Stromzufuhr wird",
-    formatDate(switchOn),
-    "ein- und",
-    formatDate(switchOff),
-    "ausgeschaltet. Der durchschnittliche Marktpreis ist",
-    centPerKWH.toFixed(2),
-    "cent/kWh.",
-  ].join(" ");
-  logAndNotify(message, sendSchedule, kvsPlanKey);
 }
 
 function calculateNonBlock(data) {
