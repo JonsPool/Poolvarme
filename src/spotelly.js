@@ -6,7 +6,7 @@
 
 let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
-let blockMode = true; // choose calculation mode
+let blockMode = true; // set calculation mode
 let switchOnDuration = 4; // minimum 1, maximum 24
 let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
@@ -16,6 +16,8 @@ let priceLimit = Infinity; // in cent/kWh
 function priceModifier(spotPrice) {
   return spotPrice; // spotPrice is in cent/kWh
 }
+
+let switchID = 0; // set the switch ID for multi-switch devices
 
 let telegramActive = false; // set to true to activate the Telegram feature
 
@@ -45,13 +47,14 @@ function logAndNotify(msg, sendTelegram) {
 }
 
 function setSwitch(value) {
-  let text = value ? "eingeschaltet" : "ausgeschaltet";
+  if (Shelly.getComponentStatus("switch", switchID).on === value) return;
+  let message = value ? "ON." : "OFF.";
   let flag = value ? sendPowerOn : sendPowerOff;
-  Shelly.call("Switch.Set", { id: 0, on: value }, function (result, error_code) {
-    if (error_code !== 0) {
-      logAndNotify("Die Stromzufuhr konnte nicht " + text + " werden.", flag);
+  Shelly.call("Switch.Set", { id: switchID, on: value }, function (result, error_code) {
+    if (error_code === 0) {
+      logAndNotify("Switch " + switchID + " has been turned " + message, flag);
     } else {
-      logAndNotify("Die Stromzufuhr wurde " + text + ".", flag);
+      logAndNotify("ERROR: Switch " + switchID + " could not be turned " + message, flag);
     }
   });
 }
