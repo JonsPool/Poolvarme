@@ -12,6 +12,11 @@ let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
 let priceLimit = Infinity; // in cent/kWh
 
+// change this function to display prices according to the conditions of your contract
+function priceModifier(spotPrice) {
+  return spotPrice; // spotPrice is in cent/kWh
+}
+
 let telegramActive = false; // set to true to activate the Telegram feature
 
 // the following settings have no effect when telegramActive is false
@@ -26,6 +31,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 let scriptID = Shelly.getCurrentScriptId();
 let kvsPlanKey = "Awattar-Plan-" + JSON.stringify(scriptID);
+let limit = priceLimit !== Infinity ? priceModifier(priceLimit) : Infinity;
 let times = {};
 
 function logAndNotify(msg, sendTelegram, kvsKey) {
@@ -144,7 +150,8 @@ function calculateBlock(data) {
   }
 
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
-    times[data.unix_seconds[i] * 1000] = data.price[i] / 10;
+    let price = priceModifier(data.price[i] / 10);
+    if (price <= limit) times[data.unix_seconds[i] * 1000] = price;
   }
 
   let switchOn = data.unix_seconds[startIndex] * 1000;
@@ -194,7 +201,8 @@ function calculateNonBlock(data) {
         hours[j - 1] = temp;
       }
     }
-    times[hours.pop() * 1000] = prices.pop() / 10;
+    let price = priceModifier(prices.pop() / 10);
+    price <= limit ? (times[hours.pop() * 1000] = price) : hours.pop();
   }
 }
 
