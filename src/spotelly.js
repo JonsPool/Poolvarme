@@ -96,7 +96,7 @@ function fetchPrices(window) {
         }
       }
 
-      if (!success) {
+      if (!success && window.end > Date.now()) {
         // try again after 20 to 22 minutes
         let period = 1200000 + Math.random() * 120000;
         print("Trying again at " + new Date(Date.now() + period).toString());
@@ -135,9 +135,11 @@ function calculateBlock(data) {
     }
   }
 
+  let cutoff = Date.now() + 1000; // only set switch markers for future hours
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
-    let price = priceModifier(data.price[i] / 10);
-    if (price <= limit) times[data.unix_seconds[i] * 1000] = price;
+    let timestamp = data.unix_seconds[i] * 1000;
+    let price = priceModifier(data.price[i]);
+    if (timestamp > cutoff && price <= limit) times[timestamp] = price;
   }
 }
 
@@ -147,6 +149,7 @@ function calculateNonBlock(data) {
   // 2. pop the elements and set switch ON markers
   let prices = data.price;
   let hours = data.unix_seconds;
+  let cutoff = Date.now() + 1000; // only set switch markers for future hours
   let temp;
   for (let i = 0; i < switchOnDuration; i++) {
     for (let j = 1; j < prices.length; j++) {
@@ -159,8 +162,9 @@ function calculateNonBlock(data) {
         hours[j - 1] = temp;
       }
     }
+    let timestamp = hours.pop() * 1000;
     let price = priceModifier(prices.pop() / 10);
-    price <= limit ? (times[hours.pop() * 1000] = price) : hours.pop();
+    if (timestamp > cutoff && price <= limit) times[timestamp] = price;
   }
 }
 
@@ -169,16 +173,7 @@ function calculateWindow() {
   let thisHour = now - (now % 3600000);
   let start = thisHour + getDuration(new Date(now).getHours(), timeWindowStartHour);
   let end = start + getDuration(timeWindowStartHour, timeWindowEndHour);
-  print(
-    JSON.stringify({
-      switchOnDuration: switchOnDuration,
-      timeWindowStartHour: timeWindowStartHour,
-      timeWindowEndHour: timeWindowEndHour,
-      systemTime: Date.now(),
-      calculatedStart: start,
-      calculatedEnd: end,
-    }),
-  );
+
   // start time is slightly randomized to spread server load
   Timer.set(Math.random() * 60000, false, fetchPrices, { start: start, end: end });
 }
