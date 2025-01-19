@@ -137,9 +137,9 @@ function calculateBlock(data) {
 
   let cutoff = Date.now() + 1000; // only set switch markers for future hours
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
-    let timestamp = data.unix_seconds[i] * 1000;
-    let price = priceModifier(data.price[i]);
-    if (timestamp > cutoff && price <= limit) times[timestamp] = price;
+    let hour = data.unix_seconds[i] * 1000;
+    let price = priceModifier(data.price[i] / 10);
+    if (hour > cutoff && price <= limit) times[hour] = price;
   }
 }
 
@@ -162,9 +162,9 @@ function calculateNonBlock(data) {
         hours[j - 1] = temp;
       }
     }
-    let timestamp = hours.pop() * 1000;
+    let hour = hours.pop() * 1000;
     let price = priceModifier(prices.pop() / 10);
-    if (timestamp > cutoff && price <= limit) times[timestamp] = price;
+    if (hour > cutoff && price <= limit) times[hour] = price;
   }
 }
 
