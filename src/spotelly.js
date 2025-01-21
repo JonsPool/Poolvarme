@@ -32,7 +32,6 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
 let scriptID = Shelly.getCurrentScriptId();
-let limit = priceLimit !== Infinity ? priceModifier(priceLimit) : Infinity;
 let times = {};
 
 function logAndNotify(msg, sendTelegram) {
@@ -108,10 +107,7 @@ function fetchPrices(window) {
 
       for (let key of Object.keys(times)) {
         let hour = Number(key);
-        let value = times[hour];
-        if (value !== null && value > priceLimit) {
-          times[hour] = null; // price limit exceeded - set switchoff marker
-        } else if (!(hour + 3600000 in times)) {
+        if (!(hour + 3600000 in times)) {
           times[hour + 3600000] = null; // set switch off indicator if needed
         }
       }
@@ -139,7 +135,7 @@ function calculateBlock(data) {
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
     let hour = data.unix_seconds[i] * 1000;
     let price = priceModifier(data.price[i] / 10);
-    if (hour > cutoff && price <= limit) times[hour] = price;
+    if (hour > cutoff && price <= priceLimit) times[hour] = price;
   }
 }
 
@@ -164,7 +160,7 @@ function calculateNonBlock(data) {
     }
     let hour = hours.pop() * 1000;
     let price = priceModifier(prices.pop() / 10);
-    if (hour > cutoff && price <= limit) times[hour] = price;
+    if (hour > cutoff && price <= priceLimit) times[hour] = price;
   }
 }
 
