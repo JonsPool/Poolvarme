@@ -31,7 +31,6 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
-let scriptID = Shelly.getCurrentScriptId();
 let times = {};
 
 function logAndNotify(msg, sendTelegram) {
@@ -192,6 +191,7 @@ function hourly() {
 
 function startUp() {
   Shelly.call("Schedule.List", {}, function (result) {
+    let scriptID = Shelly.getCurrentScriptId();
     let method = "Schedule.Update";
     let schedule = null;
     let timespec = "0 0 * * * *";
