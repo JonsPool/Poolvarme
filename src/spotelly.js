@@ -57,9 +57,14 @@ function setSwitch(value) {
   });
 }
 
-function getDuration(startHour, endHour) {
-  let hours = endHour - startHour;
-  return (hours + (hours < 1) * 24) * 3600000;
+function getHour(timestamp, hour) {
+  let d = new Date(timestamp);
+  return new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate() + Number(hour <= d.getHours()),
+    hour,
+  ).getTime();
 }
 
 function fetchPrices(window) {
@@ -164,10 +169,8 @@ function calculateNonBlock(data) {
 }
 
 function calculateWindow() {
-  let now = Date.now();
-  let thisHour = now - (now % 3600000);
-  let start = thisHour + getDuration(new Date(now).getHours(), timeWindowStartHour);
-  let end = start + getDuration(timeWindowStartHour, timeWindowEndHour);
+  let start = getHour(Date.now(), timeWindowStartHour);
+  let end = getHour(start, timeWindowEndHour);
 
   // start time is slightly randomized to spread server load
   Timer.set(Math.random() * 60000, false, fetchPrices, { start: start, end: end });
