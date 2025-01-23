@@ -45,7 +45,7 @@ function logAndNotify(msg, sendTelegram) {
 }
 
 function setSwitch(value) {
-  if (Shelly.getComponentStatus("switch", switchID).on === value) return;
+  if (Shelly.getComponentStatus("switch", switchID).output === value) return;
   let message = value ? "ON." : "OFF.";
   let flag = value ? sendPowerOn : sendPowerOff;
   Shelly.call("Switch.Set", { id: switchID, on: value }, function (result, error_code) {
