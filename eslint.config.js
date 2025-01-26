@@ -1,3 +1,6 @@
+import eslintConfigPrettier from "eslint-config-prettier";
+import globals from "globals";
+import html from "eslint-plugin-html";
 import js from "@eslint/js";
 
 export default [
@@ -5,21 +8,47 @@ export default [
   {
     rules: {
       eqeqeq: "error",
-      "func-names": ["error", "never"],
-      "func-style": ["error", "declaration"],
-      "no-shadow": ["error", { builtinGlobals: true }],
       "no-unused-vars": "error",
-      "no-use-before-define": ["error", { functions: false }],
+      "no-shadow": ["error", { builtinGlobals: true }],
       "no-var": "error",
+      "no-use-before-define": ["error", { functions: false }],
+      "prefer-const": "error",
+      "sort-imports": "error",
     },
   },
   {
+    files: ["src/spotelly.js"],
+    rules: {
+      "func-names": ["error", "never"],
+      "func-style": ["error", "declaration"],
+      "prefer-const": "off",
+    },
     languageOptions: {
       globals: {
+        atob: "readonly",
+        HTTPServer: "readonly",
         Shelly: "readonly",
         Timer: "readonly",
         print: "readonly",
       },
     },
   },
+  {
+    files: ["build.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
+    files: ["**/*.html"],
+    plugins: { html },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+  },
+  eslintConfigPrettier,
 ];

@@ -34,7 +34,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 let times = {};
 let randomOffset = Math.random() * 300000;
 let nextUpdate = 0;
-let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAAACn1SXW/UOhD9KyaqkC0SZ6FaHiC20L2AQIKCKIiHqlIde5a4dTyRPWl2tex/R9ld2goJXubDY4/nnDnNI4eWNgOwjvqgm9kyZ8hUba6ogx6UM+mG2WByVj1VS930QIZF04O69TANmIhZjASRVDF5R51ycOstVPuk9NGTN6HK1gRQTwvdBB9vWJdgpTqiIb+oa+uivM4Ogr9NMgLVcejrFpEyJTO8WspTeVo7n6m2Od8XZO+jtDmzBEFl2gTIHQDphjwF0OcDEoSwaepD3pBpAxyxFIdkb6sWk4MEjk2VGQlZvz54gjVVFiJBKnRDHRjHvFOdbqhFt5njVjf1volusk1+IG3yJlq2GqMlj5EFLrYrINvxyUeHkwxozVyRMwUywRCMBV7k47RFWcwLKISQ1EHkpDTJ64yRPzjZ3prEoIwllkbtbxB+9T2cU/LxBxcyB2+BL8qlKL3iDu3YQyT5A+hNgDn8b/Pe8aIrhPQxQnr39eMHddVQmmEyiyEPJqpT/RknSOzTSMNIbP7hQNsKEzufPNmOnWxJ5n34/vXu2EC/NgSzf4djmv3MYX3zvbsq/zpKWwjxcoWJX0AZL3HFPrXXYElCpOQhc5Lke8hCZkzEOZUglKaLxWUFF4tLIeIYwiOl4uPHHFWEic0z8LOxbyFxEKL00scMib7gxP9A7fTJFiXhB5xFOj/8TeTuUDQcxa6a/V1nnBHMjHDx5PQ5LMX+7lFde+FAdPrqSZSEb/0aHH8mxEsvVz5l+r/zwf38yf2DOYoDee6e/WOzoVrqM2QHVfwTxoPFNcNvoffVgg3Vgq0yVZ5M8LbQZ7AmNg7OELxgJ9s7UCQjrOnbviDuCLknox701U7sjkrGGNA4FZr6KP1fnKY2108EAAA="); // placeholder for compressed html - used by build script
 
 function logAndNotify(msg, sendTelegram) {
   print(msg);
