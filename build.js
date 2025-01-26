@@ -6,7 +6,7 @@ the Shelly.
 Steps performed:
 1. Minify and gzip-compress the contents of ./src/endpoint.html and encode the result in Base64
 2. Replace the {{ html }} placeholder in ./src/spotelly.js with the encoded string
-3. Write the modified source to ./dist/spotelly.js
+3. Write the modified source to ./dist/final.js
 
 This script must be run after each modification of either spotelly.js or endpoint.html and can
 be executed with 'npm run build'.
