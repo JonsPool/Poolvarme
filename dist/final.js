@@ -1,15 +1,16 @@
-// Spotelly Version 1.3
+// Spotelly Version 2.0
 // This script uses EPEX spot hourly energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
+// This script uses price data from http://energy-charts.info
 
 // <<<<< START OF CONFIGURATION - change values below to your preference >>>>>
 
 let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
-let blockMode = true; // set calculation mode
 let switchOnDuration = 4; // minimum 1, maximum 24
 let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
+let blockMode = true; // set calculation mode
 let priceLimit = Infinity; // in cent/kWh
 
 // change this function to display prices according to the conditions of your contract
@@ -34,7 +35,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 let times = {};
 let randomOffset = Math.random() * 300000;
 let nextUpdate = 0;
-let html = atob("H4sIAAAAAAAACn1SXW/UOhD9KyaqkC0SZ6FaHiC20L2AQIKCKIiHqlIde5a4dTyRPWl2tex/R9ld2goJXubDY4/nnDnNI4eWNgOwjvqgm9kyZ8hUba6ogx6UM+mG2WByVj1VS930QIZF04O69TANmIhZjASRVDF5R51ycOstVPuk9NGTN6HK1gRQTwvdBB9vWJdgpTqiIb+oa+uivM4Ogr9NMgLVcejrFpEyJTO8WspTeVo7n6m2Od8XZO+jtDmzBEFl2gTIHQDphjwF0OcDEoSwaepD3pBpAxyxFIdkb6sWk4MEjk2VGQlZvz54gjVVFiJBKnRDHRjHvFOdbqhFt5njVjf1volusk1+IG3yJlq2GqMlj5EFLrYrINvxyUeHkwxozVyRMwUywRCMBV7k47RFWcwLKISQ1EHkpDTJ64yRPzjZ3prEoIwllkbtbxB+9T2cU/LxBxcyB2+BL8qlKL3iDu3YQyT5A+hNgDn8b/Pe8aIrhPQxQnr39eMHddVQmmEyiyEPJqpT/RknSOzTSMNIbP7hQNsKEzufPNmOnWxJ5n34/vXu2EC/NgSzf4djmv3MYX3zvbsq/zpKWwjxcoWJX0AZL3HFPrXXYElCpOQhc5Lke8hCZkzEOZUglKaLxWUFF4tLIeIYwiOl4uPHHFWEic0z8LOxbyFxEKL00scMib7gxP9A7fTJFiXhB5xFOj/8TeTuUDQcxa6a/V1nnBHMjHDx5PQ5LMX+7lFde+FAdPrqSZSEb/0aHH8mxEsvVz5l+r/zwf38yf2DOYoDee6e/WOzoVrqM2QHVfwTxoPFNcNvoffVgg3Vgq0yVZ5M8LbQZ7AmNg7OELxgJ9s7UCQjrOnbviDuCLknox701U7sjkrGGNA4FZr6KP1fnKY2108EAAA="); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAAACn1SXW/UOhD9KyaqkC0SZ6FaHiC20L2AQIKCKIiHqlIde5a4dTyRPWl2tex/R9ld2goJXubDY4/nnDnNI4eWNgOwjvqgm9kyZ8hUba6ogx6UM+mG2WByVj1VS930QIZF04O69TANmIhZjASRVDF5R51ycOstVPuk9NGTN6HK1gRQTwvdBB9vWJdgpTqiIb+oa+uivM4Ogr9NMgLVcejrFpEyJTO8WspTeVo7n6m2Od8XZO+jtDmzBEFl2gTIHQDphjwF0OcDEoSwaepD3pBpAxyxFIdkb6sWk4ME7phmSn4Ax6bKjISsXx88wZoqC5EgFbqhDoxj3qlON9Si28xxq5t630M32SY/kDZ5Ey1bjdGSx8gCF9sVkO345KPDSQa0Zq7ImRCZYAjGAi/ycfaiLOZ1FEJI6iByUprkdcbIH5xsb01iUMYSS6P2Nwi/+h7OKfn4gwuZg7fAF+VSlF5xh3bsIZL8AfQmwBz+t3nveNEVQvoYIb37+vGDumoozTCZxZAHE9Wp/owTJPZppGEkNv9wIHGFiZ1PnmzHTrYk8z58/3p3bKBfG4LZv8MxzX7msL753l2Vfx2lLYR4ucLEL6CMl7hin9prsCQhUvKQOUnyPWQhMybinEoQStPF4rKCi8WlEHEM4ZFS8fFjjirCxOYZ+NnYt5A4CFF66WOGRF9w4n+gdvpki5LwA86SnR/+JnJ3KBqOYlfN/q4zzghmRrh4cvoclmJ/96i1vXAgOn31JErCt34Njj8T4qWXK58y/d/54H7+5P7BHMWBPHfP/rHZUC31GbKDKv4J48HimuG37PtqwYZqwVaZKk8meFvoM1gTGwdnCF6wk+0dKJIR1vRtXxB3hNyTUQ/6aid2RyVjDGicCk19lP4vFd1+UF0EAAA="); // placeholder for compressed html - used by build script
 
 function logAndNotify(msg, sendTelegram) {
   print(msg);

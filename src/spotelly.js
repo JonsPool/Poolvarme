@@ -1,15 +1,16 @@
-// Spotelly Version 1.3
+// Spotelly Version 2.0
 // This script uses EPEX spot hourly energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
+// This script uses price data from http://energy-charts.info
 
 // <<<<< START OF CONFIGURATION - change values below to your preference >>>>>
 
 let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
-let blockMode = true; // set calculation mode
 let switchOnDuration = 4; // minimum 1, maximum 24
 let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
+let blockMode = true; // set calculation mode
 let priceLimit = Infinity; // in cent/kWh
 
 // change this function to display prices according to the conditions of your contract
