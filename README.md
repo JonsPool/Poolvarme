@@ -21,7 +21,7 @@ and 19:00 and activate power output for this block.
 In non-block mode, the script will activate power output for the 4 cheapest hours between 7:00 and
 19:00 - independent of whether they are consecutive or not.
 
-The script provides an http endpoint that can be opened in the browser and shows the calculated
+The script provides an HTML endpoint that can be opened in the browser and shows the calculated
 schedule and the hourly prices:
 
 <p align="center">
@@ -120,7 +120,7 @@ of `Infinity` means that there is no price limit.
 ### `priceModifier`
 
 Generally, the script calculates with and displays EPEX spot prices. However, this is usually not
-the price that has to be paid to the electricity supplier - many suppliers charge a markup on the
+the price that has to be paid to the electricity supplier - many suppliers add a markup to the
 spot price and taxes like VAT are added on top of that.
 
 By changing the priceModifier function, you can define a formula that converts the EPEX market rate
@@ -215,9 +215,9 @@ npm i
 
 Now, you can make your changes by repeating the following steps as often as you need:
 
-1. Modify `./src/spotelly.js` and/or `./src/endpoint.html` as needed.
-2. Run `npm run build` to execute the HTML compression and merge.
-3. Install the merged source file `./dist/final.js` on your Shelly.
+1. Modify `./src/spotelly.js` and/or `./src/endpoint.html` as needed
+2. Run `npm run build` to execute the HTML compression and merge
+3. Install the merged source file `./dist/final.js` on your Shelly´
 
-See the source code in the build script `build.js` for a more detailed description of the
-compression and merge process.
+See the source code in the build script `build.js` for a detailed description of the compression
+and merge process.
