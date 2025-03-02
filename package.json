@@ -10,6 +10,7 @@
     "eslint-plugin-html": "^8.1.2",
     "globals": "^16.0.0",
     "html-minifier": "^4.0.0",
+    "node-zopfli-es": "^2.0.4",
     "prettier": "^3.5.2"
   }
 }

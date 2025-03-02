@@ -12,9 +12,9 @@ This script must be run after each modification of either spotelly.js or endpoin
 be executed with 'npm run build'.
 */
 
+import Zopfli from "node-zopfli-es";
 import fs from "node:fs";
 import { minify } from "html-minifier";
-import zlib from "node:zlib";
 
 const main = (htmlfile, sourceJS, targetJS) => {
   const html = fs.readFileSync(htmlfile, "utf8");
@@ -30,7 +30,7 @@ const main = (htmlfile, sourceJS, targetJS) => {
   });
   console.log("Minified:", minified.length, "bytes");
 
-  const compressed = zlib.gzipSync(minified);
+  const compressed = Zopfli.gzipSync(minified);
   console.log("Compressed:", compressed.length, "bytes");
 
   const encoded = compressed.toString("base64");
