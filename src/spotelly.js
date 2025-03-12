@@ -33,7 +33,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
 let times = {};
-let randomOffset = Math.random() * 300000;
+let randomOffset = Math.floor(Math.random() * 300000);
 let nextUpdate = 0;
 let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
 
