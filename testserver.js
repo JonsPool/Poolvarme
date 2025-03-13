@@ -46,12 +46,12 @@ const loadEndpointHTML = async () => {
 
 await loadEndpointHTML();
 
-// Watch for changes to endpoint.html
-watch(htmlPath, async eventType => {
-  if (eventType === "change") {
-    await loadEndpointHTML();
+(async () => {
+  const watcher = watch(htmlPath);
+  for await (const event of watcher) {
+    if (event.eventType === "change") await loadEndpointHTML();
   }
-});
+})();
 
 const server = http.createServer((req, res) => {
   if (req.method === "GET") {
