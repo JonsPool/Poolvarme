@@ -17,7 +17,7 @@ export default [
     },
   },
   {
-    files: ["src/spotelly.js"],
+    files: ["src/*.js"],
     rules: {
       "func-names": ["error", "never"],
       "func-style": ["error", "declaration"],
@@ -34,7 +34,7 @@ export default [
     },
   },
   {
-    files: ["build.js"],
+    files: ["*.js"],
     languageOptions: {
       globals: {
         ...globals.node,

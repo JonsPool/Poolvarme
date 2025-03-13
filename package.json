@@ -1,7 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "build": "node build.js"
+    "build": "node build.js",
+    "dev": "node testserver.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
