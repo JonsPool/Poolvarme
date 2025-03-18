@@ -1,5 +1,5 @@
 <!doctype html>
-<html data-bs-theme="dark" class="mt-5">
+<html data-bs-theme="dark">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link
@@ -9,11 +9,14 @@
     <title>Spotelly</title>
   </head>
 
-  <body>
-    <table class="table table-bordered table-striped w-auto mx-auto text-center">
-      <thead id="h"></thead>
-      <tbody id="b"></tbody>
-    </table>
+  <body class="d-flex flex-column text-center">
+    <main class="flex-grow-1 py-5">
+      <table class="table table-bordered table-striped w-auto mx-auto">
+        <thead id="h" />
+        <tbody id="b" />
+      </table>
+    </main>
+    <footer class="bg-primary fixed-bottom" id="f" />
     <script>
       async function l() {
         fetch(window.location.href.replace("spotelly", "data"))
@@ -33,7 +36,8 @@
 
             if (!body.firstChild) body.innerHTML = `<tr><td colspan=3 class=p-5>No data`;
 
-            body.insertRow().innerHTML = `<td colspan=3><p class="m-0 p-0 fst-italic">Next update: ${new Date(d.nextUpdate).toLocaleString()}</p>`;
+            document.getElementById("f").innerHTML =
+              `Next update: ${new Date(d.nextUpdate).toLocaleString()}`;
           });
       }
 
