@@ -1,15 +1,18 @@
 /*
 This server simulates the behavior of the script endpoints on the Shelly - useful for
-developing and testing endpoint.html. The HTML is automatically reloaded on change.
+developing and testing endpoint.html. The browser view is automatically refreshed when
+endpoint.html is modified.
 
 Start with 'npm run dev'.
 */
 
 import { readFile, watch } from "fs/promises";
+import { WebSocketServer } from "ws";
 import http from "http";
 
 const hostname = "127.0.0.1";
 const port = 3000;
+const wsPort = 3001;
 const htmlPath = "./src/endpoint.html";
 
 const data = {
@@ -46,10 +49,19 @@ const loadEndpointHTML = async () => {
 
 await loadEndpointHTML();
 
+const clients = new Set();
+
 (async () => {
   const watcher = watch(htmlPath);
   for await (const event of watcher) {
-    if (event.eventType === "change") await loadEndpointHTML();
+    if (event.eventType === "change") {
+      await loadEndpointHTML();
+      for (const client of clients) {
+        if (client.readyState === 1) {
+          client.send("reload");
+        }
+      }
+    }
   }
 })();
 
@@ -58,7 +70,16 @@ const server = http.createServer((req, res) => {
     if (req.url === "/spotelly") {
       res.statusCode = 200;
       res.setHeader("Content-Type", "text/html");
-      res.end(endpointHTML);
+      const injectedHTML = endpointHTML.replace(
+        "</body>",
+        `<script>
+          const ws = new WebSocket("ws://${hostname}:${wsPort}");
+          ws.onmessage = (event) => {
+            if (event.data === "reload") location.reload();
+          };
+        </script></body>`,
+      );
+      res.end(injectedHTML);
     } else if (req.url === "/data") {
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
@@ -77,4 +98,10 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, hostname, () => {
   console.log(`http://${hostname}:${port}/spotelly`);
+});
+
+const wss = new WebSocketServer({ port: wsPort });
+wss.on("connection", ws => {
+  clients.add(ws);
+  ws.on("close", () => clients.delete(ws));
 });
