@@ -87,29 +87,27 @@ function fetchPrices(window) {
     function (res, error_code, error_message) {
       let data;
 
-      let error;
-      let success = true;
+      let error = "";
       if (error_code !== 0) {
-        error = "API call failed with error " + error_code + " (" + error_message + "). ";
-        success = false;
+        error = "Shelly error: " + error_code + "/" + error_message;
       } else if (res.code !== 200) {
-        error = "API server responded with " + res.code + " (" + res.message + "). ";
-        success = false;
+        error = "Server error " + res.code + "/" + res.message;
       } else {
         data = JSON.parse(res.body);
         let expected = (window.end - window.start) / 3600000;
         if (data.price.length !== expected) {
-          error = "Retrieved " + data.price.length + " records; expected " + expected + ". ";
-          success = false;
+          error = "Data error: " + data.price.length + " records instead of " + expected;
         }
       }
 
-      if (!success && window.end > Date.now()) {
-        // try again after 20 minutes
-        let period = 1200000;
-        nextUpdate = Date.now() + period;
-        print(error + "Trying again at " + new Date(nextUpdate).toString());
-        Timer.set(period, false, fetchPrices, window);
+      if (error) {
+        if (window.start > Date.now() + 1800000) {
+          // retry only if window starts at least 30 minutes in the future
+          let period = 1200000;
+          nextUpdate = Math.floor(Date.now()) + period;
+          print(error + "Trying again at " + new Date(nextUpdate).toString());
+          Timer.set(period, false, fetchPrices, window);
+        }
         return;
       }
 
