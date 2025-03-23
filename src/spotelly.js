@@ -33,7 +33,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
 let times = {};
-let randomOffset = Math.floor(Math.random() * 300000);
+let randomOffset = Math.ceil(Math.random() * 300000);
 let nextUpdate = 0;
 let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
 
@@ -72,16 +72,12 @@ function getHour(timestamp, hour) {
 }
 
 function fetchPrices(window) {
+  let query = epexBZN + "&start=" + window.start / 1000 + "&end=" + (window.end / 1000 - 3600);
+
   Shelly.call(
     "http.get",
     {
-      url:
-        "https://api.energy-charts.info/price?bzn=" +
-        epexBZN +
-        "&start=" +
-        window.start / 1000 +
-        "&end=" +
-        (window.end / 1000 - 3600), // do not include last hour
+      url: "https://api.energy-charts.info/price?bzn=" + query,
     },
 
     function (res, error_code, error_message) {
@@ -111,13 +107,11 @@ function fetchPrices(window) {
         return;
       }
 
-      (blockMode ? calculateBlock : calculateNonBlock)(data);
+      (blockMode ? calculateBlock : calculateNonBlock)(data, Date.now() + 5000);
 
       for (let key of Object.keys(times)) {
-        let hour = Number(key);
-        if (!(hour + 3600000 in times)) {
-          times[hour + 3600000] = null; // set switch off indicator if needed
-        }
+        let hour = Number(key) + 3600000;
+        if (!(hour in times)) times[hour] = null; // set switch off markers
       }
 
       logAndNotify("Timetable has been updated.", sendSchedule);
@@ -126,7 +120,7 @@ function fetchPrices(window) {
   );
 }
 
-function calculateBlock(data) {
+function calculateBlock(data, cutoff) {
   let startIndex = 0;
   let lowestSum = Infinity;
   for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
@@ -140,7 +134,6 @@ function calculateBlock(data) {
     }
   }
 
-  let cutoff = Date.now() + 5000; // only set switch markers for future hours
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
     let hour = data.unix_seconds[i] * 1000;
     let price = priceModifier(data.price[i] / 10);
@@ -148,13 +141,12 @@ function calculateBlock(data) {
   }
 }
 
-function calculateNonBlock(data) {
+function calculateNonBlock(data, cutoff) {
   // do this <switchOnDuration> times:
   // 1. move the element with the lowest price to the end of both arrays
   // 2. pop the elements and set switch ON markers
   let prices = data.price;
   let hours = data.unix_seconds;
-  let cutoff = Date.now() + 5000; // only set switch markers for future hours
   let temp;
   for (let i = 0; i < switchOnDuration; i++) {
     for (let j = 1; j < prices.length; j++) {
@@ -213,7 +205,6 @@ function startUp() {
       if (job.timespec === timespec && call.params.code === code) {
         return; // this IS our schedule and it matches the configuration - we are done
       }
-      print("Schedule has changed.");
       schedule = job;
       schedule.timespec = timespec;
       call.params.code = code;

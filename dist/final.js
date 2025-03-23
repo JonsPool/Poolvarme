@@ -33,7 +33,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
 let times = {};
-let randomOffset = Math.floor(Math.random() * 300000);
+let randomOffset = Math.ceil(Math.random() * 300000);
 let nextUpdate = 0;
 let html = atob("H4sIAAAAAAACA3VTh5LzKAx+FX5fMxMb/70arvfee8Egx+xi8IDSJpN3P3Da1d0E1PXxSWnvaK9wNwEZcLSizSfREmXdxRoHGIFrGW5FOwJK4mTS1wY2kw9IlHcIDnmxMRoHrmFtFNSzUhln0EhbRyUt8HuFaK1xt2QI0PMBcYrPm0Zpx26iBmvWgTnAxk1j03mPEYOc3njEHrAHjTYRGxXj1cFG41iykACWR9xZiAMAihYNWhBfTx7B2l3bHPW283pHlJUx8kLXvYUtyUetvF2NjiBssVbgEEJCOUrjzsFz1DL4TX2PjFg/IGNXP0oxKDsL56CjMp9154OGAPqkJrRmStqmliv0ZNzOdy4wgNTEaD4kOcPLcicS4pyX7oxCtL33COHcqFvWUzCjDDvSmy3o1A3Rj0XO7UUbVWqGwgKS3odR4gd+FThygQz9N2aErxMatywpi9YoKO9Wj+gLGXdOkX7lFBrviC3pvgdUQ7kxTvsNs17J7GF5bizAZGVKLeKJ4qIq8qoUlDIcwJVzt5voXfkXyz5DAl4UleN3K5++gd99ob1ajeCQLQHftZDFt3Yf6rIYCsqMcxA++ObTT/gfLYbMF1Hexkk6/kB84TcQyOcrnFZI8sNm0vKjydcbk8CTl/fI4ix++M7hVEC8IxHynWnJd554c/v98MeLlFmuZfhZVvZX35PPuxtQyJI7GIglMkw9YqLNByxLrIBygT/f/bWGdFDqVtbe4dy++mrpFovKL7itJHewIblj+dlq7CCUktIKFufnaPHyXjL0nyR6LeS483AOR+d1ginzUP/NcCktM3eZgJIuHjyGR3TOPq3LvNXgtPhjYVOn9/LGlPcpfQGvB+4b9xx4cQJz5faUO9WPxGeezKOt/ndQ/d8HlbHF54l7d6jIm2sIcgnki2AUZGP4C4YDOXPfdkF8loCSb6fULAX+sbi8DplLnqODnrm68PT/sLq/wYIDPZx22Tvrpea2bU4/lT8By72VTvsEAAA="); // placeholder for compressed html - used by build script
 
@@ -72,16 +72,12 @@ function getHour(timestamp, hour) {
 }
 
 function fetchPrices(window) {
+  let query = epexBZN + "&start=" + window.start / 1000 + "&end=" + (window.end / 1000 - 3600);
+
   Shelly.call(
     "http.get",
     {
-      url:
-        "https://api.energy-charts.info/price?bzn=" +
-        epexBZN +
-        "&start=" +
-        window.start / 1000 +
-        "&end=" +
-        (window.end / 1000 - 3600), // do not include last hour
+      url: "https://api.energy-charts.info/price?bzn=" + query,
     },
 
     function (res, error_code, error_message) {
@@ -111,13 +107,11 @@ function fetchPrices(window) {
         return;
       }
 
-      (blockMode ? calculateBlock : calculateNonBlock)(data);
+      (blockMode ? calculateBlock : calculateNonBlock)(data, Date.now() + 5000);
 
       for (let key of Object.keys(times)) {
-        let hour = Number(key);
-        if (!(hour + 3600000 in times)) {
-          times[hour + 3600000] = null; // set switch off indicator if needed
-        }
+        let hour = Number(key) + 3600000;
+        if (!(hour in times)) times[hour] = null; // set switch off markers
       }
 
       logAndNotify("Timetable has been updated.", sendSchedule);
@@ -126,7 +120,7 @@ function fetchPrices(window) {
   );
 }
 
-function calculateBlock(data) {
+function calculateBlock(data, cutoff) {
   let startIndex = 0;
   let lowestSum = Infinity;
   for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
@@ -140,7 +134,6 @@ function calculateBlock(data) {
     }
   }
 
-  let cutoff = Date.now() + 5000; // only set switch markers for future hours
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
     let hour = data.unix_seconds[i] * 1000;
     let price = priceModifier(data.price[i] / 10);
@@ -148,13 +141,12 @@ function calculateBlock(data) {
   }
 }
 
-function calculateNonBlock(data) {
+function calculateNonBlock(data, cutoff) {
   // do this <switchOnDuration> times:
   // 1. move the element with the lowest price to the end of both arrays
   // 2. pop the elements and set switch ON markers
   let prices = data.price;
   let hours = data.unix_seconds;
-  let cutoff = Date.now() + 5000; // only set switch markers for future hours
   let temp;
   for (let i = 0; i < switchOnDuration; i++) {
     for (let j = 1; j < prices.length; j++) {
@@ -213,7 +205,6 @@ function startUp() {
       if (job.timespec === timespec && call.params.code === code) {
         return; // this IS our schedule and it matches the configuration - we are done
       }
-      print("Schedule has changed.");
       schedule = job;
       schedule.timespec = timespec;
       call.params.code = code;
