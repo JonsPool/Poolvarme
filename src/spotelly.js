@@ -42,7 +42,7 @@ function logAndNotify(msg, sendTelegram) {
   if (telegramActive && sendTelegram) {
     Shelly.call("http.post", {
       url: "https://api.telegram.org/bot" + telegramToken + "/sendMessage",
-      header: { content_type: "application/json" },
+      content_type: "application/json",
       body: { chat_id: telegramChatID, text: deviceName + ": " + msg },
     });
   }
@@ -96,18 +96,20 @@ function fetchPrices(window) {
         }
       }
 
+      let now = Math.floor(Date.now());
+
       if (error) {
-        if (window.start > Date.now() + 1800000) {
+        if (window.start > now + 1800000) {
           // retry only if window starts at least 30 minutes in the future
           let period = 1200000;
-          nextUpdate = Math.floor(Date.now()) + period;
+          nextUpdate = now + period;
           print(error + "Trying again at " + new Date(nextUpdate).toString());
           Timer.set(period, false, fetchPrices, window);
         }
         return;
       }
 
-      (blockMode ? calculateBlock : calculateNonBlock)(data, Date.now() + 5000);
+      (blockMode ? calculateBlock : calculateNonBlock)(data.unix_seconds, data.price, now + 5000);
 
       for (let key of Object.keys(times)) {
         let hour = Number(key) + 3600000;
@@ -120,12 +122,12 @@ function fetchPrices(window) {
   );
 }
 
-function calculateBlock(data, cutoff) {
+function calculateBlock(hours, prices, cutoff) {
   let startIndex = 0;
   let lowestSum = Infinity;
-  for (let i = 0, j = switchOnDuration; j <= data.price.length; i++, j++) {
+  for (let i = 0, j = switchOnDuration; j <= prices.length; i++, j++) {
     let sliceSum = 0;
-    data.price.slice(i, j).forEach(function (price) {
+    prices.slice(i, j).forEach(function (price) {
       sliceSum += price;
     });
     if (sliceSum < lowestSum) {
@@ -135,18 +137,14 @@ function calculateBlock(data, cutoff) {
   }
 
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
-    let hour = data.unix_seconds[i] * 1000;
-    let price = priceModifier(data.price[i] / 10);
-    if (hour > cutoff && price <= priceLimit) times[hour] = price;
+    setSwitchOn(hours[i] * 1000, priceModifier(prices[i] / 10), cutoff);
   }
 }
 
-function calculateNonBlock(data, cutoff) {
+function calculateNonBlock(hours, prices, cutoff) {
   // do this <switchOnDuration> times:
   // 1. move the element with the lowest price to the end of both arrays
   // 2. pop the elements and set switch ON markers
-  let prices = data.price;
-  let hours = data.unix_seconds;
   let temp;
   for (let i = 0; i < switchOnDuration; i++) {
     for (let j = 1; j < prices.length; j++) {
@@ -159,10 +157,12 @@ function calculateNonBlock(data, cutoff) {
         hours[j - 1] = temp;
       }
     }
-    let hour = hours.pop() * 1000;
-    let price = priceModifier(prices.pop() / 10);
-    if (hour > cutoff && price <= priceLimit) times[hour] = price;
+    setSwitchOn(hours.pop() * 1000, priceModifier(prices.pop() / 10), cutoff);
   }
+}
+
+function setSwitchOn(hour, price, cutoff) {
+  if (hour > cutoff && price <= priceLimit) times[hour] = price;
 }
 
 function calculateWindow() {
