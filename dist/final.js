@@ -5,7 +5,7 @@
 
 // <<<<< START OF CONFIGURATION - change values below to your preference >>>>>
 
-let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
+let awattarCountry = "at"; // at for Austrian or de for German API
 
 let switchOnDuration = 4; // minimum 1, maximum 24
 let timeWindowStartHour = 7; // minimum 0, maximum 23
@@ -72,12 +72,12 @@ function getHour(timestamp, hour) {
 }
 
 function fetchPrices(window) {
-  let query = epexBZN + "&start=" + window.start / 1000 + "&end=" + (window.end / 1000 - 3600);
+  let query = "?start=" + window.start + "&end=" + window.end;
 
   Shelly.call(
     "http.get",
     {
-      url: "https://api.energy-charts.info/price?bzn=" + query,
+      url: "https://api.awattar." + awattarCountry + "/v1/marketdata" + query,
     },
 
     function (res, error_code, error_message) {
@@ -89,11 +89,12 @@ function fetchPrices(window) {
       } else if (res.code !== 200) {
         error = "Server error " + res.code + "/" + res.message;
       } else {
-        data = JSON.parse(res.body);
+        data = JSON.parse(res.body)["data"];
         let expected = (window.end - window.start) / 3600000;
-        if (data.price.length !== expected) {
-          error = "Data error: " + data.price.length + " records instead of " + expected;
+        if (data.length !== expected) {
+          error = "Data error: " + data.length + " records instead of " + expected;
         }
+        res.body = null; // free up RAM
       }
 
       let now = Math.floor(Date.now());
@@ -109,7 +110,7 @@ function fetchPrices(window) {
         return;
       }
 
-      (blockMode ? calculateBlock : calculateNonBlock)(data.unix_seconds, data.price, now + 5000);
+      (blockMode ? calculateBlock : calculateNonBlock)(data, now + 5000);
 
       for (let key of Object.keys(times)) {
         let hour = Number(key) + 3600000;
@@ -122,13 +123,13 @@ function fetchPrices(window) {
   );
 }
 
-function calculateBlock(hours, prices, cutoff) {
+function calculateBlock(data, cutoff) {
   let startIndex = 0;
   let lowestSum = Infinity;
-  for (let i = 0, j = switchOnDuration; j <= prices.length; i++, j++) {
+  for (let i = 0, j = switchOnDuration; j <= data.length; i++, j++) {
     let sliceSum = 0;
-    prices.slice(i, j).forEach(function (price) {
-      sliceSum += price;
+    data.slice(i, j).forEach(function (ele) {
+      sliceSum += ele.marketprice;
     });
     if (sliceSum < lowestSum) {
       startIndex = i;
@@ -137,27 +138,25 @@ function calculateBlock(hours, prices, cutoff) {
   }
 
   for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
-    setSwitchOn(hours[i] * 1000, priceModifier(prices[i] / 10), cutoff);
+    setSwitchOn(data[i].start_timestamp, priceModifier(data[i].marketprice / 10), cutoff);
   }
 }
 
-function calculateNonBlock(hours, prices, cutoff) {
+function calculateNonBlock(data, cutoff) {
   // do this <switchOnDuration> times:
-  // 1. move the element with the lowest price to the end of both arrays
-  // 2. pop the elements and set switch ON markers
+  // 1. move the element with the lowest price to the end of the data array
+  // 2. pop the element and set switch ON markers
   let temp;
   for (let i = 0; i < switchOnDuration; i++) {
-    for (let j = 1; j < prices.length; j++) {
-      if (prices[j] > prices[j - 1]) {
-        temp = prices[j];
-        prices[j] = prices[j - 1];
-        prices[j - 1] = temp;
-        temp = hours[j];
-        hours[j] = hours[j - 1];
-        hours[j - 1] = temp;
+    for (let j = 1; j < data.length; j++) {
+      if (data[j].marketprice > data[j - 1].marketprice) {
+        temp = data[j];
+        data[j] = data[j - 1];
+        data[j - 1] = temp;
       }
     }
-    setSwitchOn(hours.pop() * 1000, priceModifier(prices.pop() / 10), cutoff);
+    let ele = data.pop();
+    setSwitchOn(ele.start_timestamp, priceModifier(ele.marketprice / 10), cutoff);
   }
 }
 
