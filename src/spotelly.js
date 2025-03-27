@@ -32,12 +32,12 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
-let times = {};
-let randomOffset = Math.ceil(Math.random() * 300000);
-let nextUpdate = 0;
+let t = {};
+let rOff = Math.ceil(Math.random() * 300000);
+let next = 0;
 let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
 
-function logAndNotify(msg, sendTelegram) {
+function log(msg, sendTelegram) {
   print(msg);
   if (telegramActive && sendTelegram) {
     Shelly.call("http.post", {
@@ -48,21 +48,21 @@ function logAndNotify(msg, sendTelegram) {
   }
 }
 
-function setSwitch(value) {
-  if (Shelly.getComponentStatus("switch", switchID).output === value) return;
-  let message = value ? "ON." : "OFF.";
-  let flag = value ? sendPowerOn : sendPowerOff;
-  Shelly.call("Switch.Set", { id: switchID, on: value }, function (result, error_code) {
-    if (error_code === 0) {
-      logAndNotify("Switch " + switchID + " has been turned " + message, flag);
+function set(val) {
+  if (Shelly.getComponentStatus("switch", switchID).output === val) return;
+  let msg = val ? "ON." : "OFF.";
+  let flag = val ? sendPowerOn : sendPowerOff;
+  Shelly.call("Switch.Set", { id: switchID, on: val }, function (res, errc) {
+    if (errc === 0) {
+      log("Switch " + switchID + " has been turned " + msg, flag);
     } else {
-      logAndNotify("ERROR: Switch " + switchID + " could not be turned " + message, flag);
+      log("ERROR: Switch " + switchID + " could not be turned " + msg, flag);
     }
   });
 }
 
-function getHour(timestamp, hour) {
-  let d = new Date(timestamp);
+function getH(ts, hour) {
+  let d = new Date(ts);
   return new Date(
     d.getFullYear(),
     d.getMonth(),
@@ -71,65 +71,65 @@ function getHour(timestamp, hour) {
   ).getTime();
 }
 
-function fetchPrices(window) {
-  let query = "?start=" + window.start + "&end=" + window.end;
+function getP(win) {
+  let qry = "?start=" + win.start + "&end=" + win.end;
 
   Shelly.call(
     "http.get",
-    { url: "https://api.awattar." + awattarCountry + "/v1/marketdata" + query },
-    processPrices,
-    window,
+    { url: "https://api.awattar." + awattarCountry + "/v1/marketdata" + qry },
+    prcP,
+    win,
   );
 }
 
-function processPrices(res, error_code, error_message, window) {
+function prcP(res, errc, errm, win) {
   let data;
 
-  let error = "";
-  if (error_code !== 0) {
-    error = "Shelly error: " + error_code + "/" + error_message;
+  let err = "";
+  if (errc !== 0) {
+    err = "Shelly error: " + errc + "/" + errm;
   } else if (res.code !== 200) {
-    error = "Server error " + res.code + "/" + res.message;
+    err = "Server error " + res.code + "/" + res.message;
   } else {
     data = JSON.parse(res.body)["data"];
-    let expected = (window.end - window.start) / 3600000;
-    if (data.length !== expected) {
-      error = "Data error: " + data.length + " records instead of " + expected;
+    let exp = (win.end - win.start) / 3600000;
+    if (data.length !== exp) {
+      err = "Data error: " + data.length + " records instead of " + exp;
     }
     res.body = null; // free up RAM
   }
 
   let now = Math.floor(Date.now());
 
-  if (error) {
-    if (window.start > now + 1800000) {
+  if (err) {
+    if (win.start > now + 1800000) {
       // retry only if window starts at least 30 minutes in the future
-      let period = 1200000;
-      nextUpdate = now + period;
-      print(error + "Trying again at " + new Date(nextUpdate).toString());
-      Timer.set(period, false, fetchPrices, window);
+      let per = 1200000;
+      next = now + per;
+      print(err + "Trying again at " + new Date(next).toString());
+      Timer.set(per, false, getP, win);
     }
     return;
   }
 
-  let startIndex = 0;
-  let duration = Math.min(switchOnDuration, data.length);
+  let sidx = 0;
+  let dur = Math.min(switchOnDuration, data.length);
 
   if (blockMode) {
-    let lowestSum = Infinity;
-    for (let i = 0, j = duration; j <= data.length; i++, j++) {
-      let sliceSum = 0;
+    let lSum = Infinity;
+    for (let i = 0, j = dur; j <= data.length; i++, j++) {
+      let sSum = 0;
       data.slice(i, j).forEach(function (ele) {
-        sliceSum += ele.marketprice;
+        sSum += ele.marketprice;
       });
-      if (sliceSum < lowestSum) {
-        startIndex = i;
-        lowestSum = sliceSum;
+      if (sSum < lSum) {
+        sidx = i;
+        lSum = sSum;
       }
     }
   } else {
     // move the <duration> elements with the lowest price to the end of the data array
-    for (let i = 0; i < duration; i++) {
+    for (let i = 0; i < dur; i++) {
       for (let j = 1; j < data.length; j++) {
         if (data[j].marketprice > data[j - 1].marketprice) {
           let temp = data[j];
@@ -138,103 +138,103 @@ function processPrices(res, error_code, error_message, window) {
         }
       }
     }
-    startIndex = -duration;
+    sidx = -dur;
   }
 
-  for (let ele of data.splice(startIndex, duration)) {
-    let price = priceModifier(ele.marketprice / 10);
-    if (price <= priceLimit) times[ele.start_timestamp] = price;
+  for (let ele of data.splice(sidx, dur)) {
+    let p = priceModifier(ele.marketprice / 10);
+    if (p <= priceLimit) t[ele.start_timestamp] = p;
   }
 
-  for (let key of Object.keys(times)) {
+  for (let key of Object.keys(t)) {
     let hour = Number(key) + 3600000;
-    if (!(hour in times)) times[hour] = null; // set switch off markers
+    if (!(hour in t)) t[hour] = null; // set switch off markers
   }
 
-  logAndNotify("Timetable has been updated.", sendSchedule);
-  nextUpdate = getHour(nextUpdate, 15) + randomOffset;
+  log("Timetable has been updated.", sendSchedule);
+  next = getH(next, 15) + rOff;
 }
 
-function calculateWindow() {
-  let start = getHour(Date.now(), timeWindowStartHour);
-  let end = getHour(start, timeWindowEndHour);
+function clcW() {
+  let strt = getH(Date.now(), timeWindowStartHour);
+  let end = getH(strt, timeWindowEndHour);
 
-  Timer.set(randomOffset, false, fetchPrices, { start: start, end: end });
+  Timer.set(rOff, false, getP, { start: strt, end: end });
 }
 
 // eslint-disable-next-line no-unused-vars
-function hourly() {
+function hrly() {
   let now = Date.now();
-  let thisHour = now - (now % 3600000);
+  let hour = now - (now % 3600000);
 
-  if (thisHour in times) {
-    setSwitch(times[thisHour] !== null);
-    delete times[thisHour];
+  if (hour in t) {
+    set(t[hour] !== null);
+    delete t[hour];
   }
 
   // start calculation for next time window at 15:00
-  if (new Date(thisHour).getHours() === 15) {
-    calculateWindow();
+  if (new Date(hour).getHours() === 15) {
+    clcW();
   }
 }
 
-function startUp() {
-  nextUpdate = getHour(Date.now(), 15) + randomOffset;
-  Shelly.call("Schedule.List", {}, function (result) {
-    let scriptID = Shelly.getCurrentScriptId();
-    let method = "Schedule.Update";
-    let schedule = null;
-    let timespec = "0 0 * * * *";
-    let code = "hourly()";
+function init() {
+  next = getH(Date.now(), 15) + rOff;
+  Shelly.call("Schedule.List", {}, function (res) {
+    let sid = Shelly.getCurrentScriptId();
+    let mthd = "Schedule.Update";
+    let schd = null;
+    let tspc = "0 0 * * * *";
+    let code = "hrly()";
 
-    for (let job of result.jobs) {
+    for (let job of res.jobs) {
       let call = job.calls[0];
-      if (!(call.method.toLowerCase() === "script.eval" && call.params.id === scriptID)) {
+      if (!(call.method.toLowerCase() === "script.eval" && call.params.id === sid)) {
         continue; // this is not our schedule - skip
       }
-      if (job.timespec === timespec && call.params.code === code) {
+      if (job.timespec === tspc && call.params.code === code) {
         return; // this IS our schedule and it matches the configuration - we are done
       }
-      schedule = job;
-      schedule.timespec = timespec;
+      schd = job;
+      schd.timespec = tspc;
       call.params.code = code;
       break;
     }
 
-    if (schedule === null) {
+    if (schd === null) {
       // schedule does not exist - create it
-      method = "Schedule.Create";
-      schedule = {
+      mthd = "Schedule.Create";
+      schd = {
         enable: true,
-        timespec: timespec,
-        calls: [{ method: "Script.Eval", params: { id: scriptID, code: code } }],
+        timespec: tspc,
+        calls: [{ method: "Script.Eval", params: { id: sid, code: code } }],
       };
     }
 
-    Shelly.call(method, schedule);
+    Shelly.call(mthd, schd);
   });
 }
 
-function spotellyEndpoint(request, response) {
-  response.headers = [
+function spEP(req, res) {
+  res.headers = [
     ["Content-Type", "text/html"],
     ["Content-Encoding", "gzip"],
   ];
-  response.body = html;
-  response.send();
+  res.body = html;
+  res.send();
 }
 
-function dataEndpoint(request, response) {
-  response.headers = [["Content-Type", "application/json"]];
-  response.body = JSON.stringify({
-    nextUpdate: nextUpdate,
+function dtEP(req, res) {
+  res.headers = [["Content-Type", "application/json"]];
+  res.body = JSON.stringify({
+    nextUpdate: next,
     switchID: switchID,
-    times: times,
+    times: t,
   });
-  response.send();
+  res.send();
 }
 
-HTTPServer.registerEndpoint("spotelly", spotellyEndpoint);
-HTTPServer.registerEndpoint("data", dataEndpoint);
+HTTPServer.registerEndpoint("spotelly", spEP);
+HTTPServer.registerEndpoint("data", dtEP);
 
-startUp();
+init();
