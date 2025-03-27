@@ -76,92 +76,83 @@ function fetchPrices(window) {
 
   Shelly.call(
     "http.get",
-    {
-      url: "https://api.awattar." + awattarCountry + "/v1/marketdata" + query,
-    },
-
-    function (res, error_code, error_message) {
-      let data;
-
-      let error = "";
-      if (error_code !== 0) {
-        error = "Shelly error: " + error_code + "/" + error_message;
-      } else if (res.code !== 200) {
-        error = "Server error " + res.code + "/" + res.message;
-      } else {
-        data = JSON.parse(res.body)["data"];
-        let expected = (window.end - window.start) / 3600000;
-        if (data.length !== expected) {
-          error = "Data error: " + data.length + " records instead of " + expected;
-        }
-        res.body = null; // free up RAM
-      }
-
-      let now = Math.floor(Date.now());
-
-      if (error) {
-        if (window.start > now + 1800000) {
-          // retry only if window starts at least 30 minutes in the future
-          let period = 1200000;
-          nextUpdate = now + period;
-          print(error + "Trying again at " + new Date(nextUpdate).toString());
-          Timer.set(period, false, fetchPrices, window);
-        }
-        return;
-      }
-
-      (blockMode ? calculateBlock : calculateNonBlock)(data, now + 5000);
-
-      for (let key of Object.keys(times)) {
-        let hour = Number(key) + 3600000;
-        if (!(hour in times)) times[hour] = null; // set switch off markers
-      }
-
-      logAndNotify("Timetable has been updated.", sendSchedule);
-      nextUpdate = getHour(nextUpdate, 15) + randomOffset;
-    },
+    { url: "https://api.awattar." + awattarCountry + "/v1/marketdata" + query },
+    processPrices,
+    window,
   );
 }
 
-function calculateBlock(data, cutoff) {
-  let startIndex = 0;
-  let lowestSum = Infinity;
-  for (let i = 0, j = switchOnDuration; j <= data.length; i++, j++) {
-    let sliceSum = 0;
-    data.slice(i, j).forEach(function (ele) {
-      sliceSum += ele.marketprice;
-    });
-    if (sliceSum < lowestSum) {
-      startIndex = i;
-      lowestSum = sliceSum;
+function processPrices(res, error_code, error_message, window) {
+  let data;
+
+  let error = "";
+  if (error_code !== 0) {
+    error = "Shelly error: " + error_code + "/" + error_message;
+  } else if (res.code !== 200) {
+    error = "Server error " + res.code + "/" + res.message;
+  } else {
+    data = JSON.parse(res.body)["data"];
+    let expected = (window.end - window.start) / 3600000;
+    if (data.length !== expected) {
+      error = "Data error: " + data.length + " records instead of " + expected;
     }
+    res.body = null; // free up RAM
   }
 
-  for (let i = startIndex; i < startIndex + switchOnDuration; i++) {
-    setSwitchOn(data[i].start_timestamp, priceModifier(data[i].marketprice / 10), cutoff);
-  }
-}
+  let now = Math.floor(Date.now());
 
-function calculateNonBlock(data, cutoff) {
-  // do this <switchOnDuration> times:
-  // 1. move the element with the lowest price to the end of the data array
-  // 2. pop the element and set switch ON markers
-  let temp;
-  for (let i = 0; i < switchOnDuration; i++) {
-    for (let j = 1; j < data.length; j++) {
-      if (data[j].marketprice > data[j - 1].marketprice) {
-        temp = data[j];
-        data[j] = data[j - 1];
-        data[j - 1] = temp;
+  if (error) {
+    if (window.start > now + 1800000) {
+      // retry only if window starts at least 30 minutes in the future
+      let period = 1200000;
+      nextUpdate = now + period;
+      print(error + "Trying again at " + new Date(nextUpdate).toString());
+      Timer.set(period, false, fetchPrices, window);
+    }
+    return;
+  }
+
+  let startIndex = 0;
+  let duration = Math.min(switchOnDuration, data.length);
+
+  if (blockMode) {
+    let lowestSum = Infinity;
+    for (let i = 0, j = duration; j <= data.length; i++, j++) {
+      let sliceSum = 0;
+      data.slice(i, j).forEach(function (ele) {
+        sliceSum += ele.marketprice;
+      });
+      if (sliceSum < lowestSum) {
+        startIndex = i;
+        lowestSum = sliceSum;
       }
     }
-    let ele = data.pop();
-    setSwitchOn(ele.start_timestamp, priceModifier(ele.marketprice / 10), cutoff);
+  } else {
+    // move the <duration> elements with the lowest price to the end of the data array
+    for (let i = 0; i < duration; i++) {
+      for (let j = 1; j < data.length; j++) {
+        if (data[j].marketprice > data[j - 1].marketprice) {
+          let temp = data[j];
+          data[j] = data[j - 1];
+          data[j - 1] = temp;
+        }
+      }
+    }
+    startIndex = -duration;
   }
-}
 
-function setSwitchOn(hour, price, cutoff) {
-  if (hour > cutoff && price <= priceLimit) times[hour] = price;
+  for (let ele of data.splice(startIndex, duration)) {
+    let price = priceModifier(ele.marketprice / 10);
+    if (price <= priceLimit) times[ele.start_timestamp] = price;
+  }
+
+  for (let key of Object.keys(times)) {
+    let hour = Number(key) + 3600000;
+    if (!(hour in times)) times[hour] = null; // set switch off markers
+  }
+
+  logAndNotify("Timetable has been updated.", sendSchedule);
+  nextUpdate = getHour(nextUpdate, 15) + randomOffset;
 }
 
 function calculateWindow() {
