@@ -12,6 +12,7 @@ let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
 let blockMode = true; // set calculation mode
 let priceLimit = Infinity; // in cent/kWh
+let useFallback = true; // if true, use fallback when price retrieval fails
 
 // change this function to display prices according to the conditions of your contract
 function priceModifier(spotPrice) {
@@ -84,6 +85,7 @@ function getP(win) {
 
 function prcP(res, errc, errm, win) {
   let data;
+  let fbm = false;
 
   let err = "";
   if (errc !== 0) {
@@ -108,8 +110,19 @@ function prcP(res, errc, errm, win) {
       next = now + per;
       print(err + "Trying again at " + new Date(next).toString());
       Timer.set(per, false, getP, win);
+      return;
     }
-    return;
+    if (!useFallback) return;
+    // no prices retrieved and useFallback is true - do the fallback
+    fbm = true;
+    let fbp = [
+      0.625, 0.577, 0.556, 0.54, 0.548, 0.605, 0.741, 0.839, 0.805, 0.679, 0.568, 0.496, 0.442,
+      0.415, 0.437, 0.527, 0.649, 0.806, 0.922, 1, 0.957, 0.828, 0.745, 0.658,
+    ];
+    data = [];
+    for (let i = win.start; i < win.end; i += 3600000) {
+      data.push({ start_timestamp: i, marketprice: fbp[new Date(i).getHours()] });
+    }
   }
 
   let sidx = 0;
@@ -142,13 +155,17 @@ function prcP(res, errc, errm, win) {
   }
 
   for (let ele of data.splice(sidx, dur)) {
+    if (fbm) {
+      t[ele.start_timestamp] = "-"; // we don't know the price in fallback mode
+      continue;
+    }
     let p = priceModifier(ele.marketprice / 10);
     if (p <= priceLimit) t[ele.start_timestamp] = p;
   }
 
   for (let key of Object.keys(t)) {
     let hour = Number(key) + 3600000;
-    if (!(hour in t)) t[hour] = null; // set switch off markers
+    if (!(hour in t)) t[hour] = "off"; // set switch off markers
   }
 
   log("Timetable has been updated.", sendSchedule);
@@ -227,9 +244,9 @@ function spEP(req, res) {
 function dtEP(req, res) {
   res.headers = [["Content-Type", "application/json"]];
   res.body = JSON.stringify({
-    nextUpdate: next,
-    switchID: switchID,
-    times: t,
+    n: next,
+    s: switchID,
+    t: t,
   });
   res.send();
 }

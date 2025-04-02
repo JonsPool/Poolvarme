@@ -12,7 +12,7 @@ export default [
       "no-shadow": ["error", { builtinGlobals: true }],
       "no-var": "error",
       "no-use-before-define": ["error", { functions: false }],
-      "prefer-const": "error",
+      "prefer-const": ["error", { destructuring: all }],
       "sort-imports": "error",
     },
   },

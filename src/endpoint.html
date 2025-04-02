@@ -16,32 +16,44 @@
 
     <footer class="bg-primary fixed-bottom" id="f" />
     <script>
-      const formatHour = x => x.toTimeString().slice(0, 5);
+      const f = x => x.toTimeString().slice(0, 5);
+      const u = (x, y) => (document.getElementById(x).innerHTML = y);
 
       async function l() {
         fetch(window.location.href.replace("spotelly", "data"))
           .then(r => r.json())
           .then(d => {
-            let body = "";
             let count = 0;
-            let sum = 0;
             let average = 0;
 
-            document.getElementById("h").innerHTML = `<tr><th colspan=3>Power Output Timetable for Switch ${d.switchID}<tr><th>Date<th>Hour<th>cent/kWh`;
+            u("h", `<tr><th colspan=3>Power Output Timetable for Switch ${d.s}<tr><th>Date<th>Hour<th>ct/kWh`);
 
-            for (const [h, p] of Object.entries(d.times).sort((a, b) => a[0] - b[0])) {
-              if (p !== null) {
+            const times = Object.entries(d.t)
+              .filter(x => x[1] !== "off")
+              .sort((a, b) => a[0] - b[0]);
+
+            if (!times.length) {
+              u("b", "<tr><td colspan=3 class=p-5>No data");
+            } else {
+              let body = "";
+              let sum = 0;
+              let fallback = false;
+              for (let [h, p] of times) {
                 count++;
-                sum += p;
+                if (!fallback && p !== "-") {
+                  sum += p;
+                  p = p.toFixed(2);
+                } else {
+                  fallback = true;
+                }
                 const start = new Date(Number(h));
-                body += `<tr><td>${start.toLocaleDateString()}<td>${formatHour(start)}-${formatHour(new Date(start.getTime() + 3_600_000))}<td class=text-end>${p.toFixed(2)}`;
+                body += `<tr><td>${start.toLocaleDateString()}<td>${f(start)}-${f(new Date(start.getTime() + 3_600_000))}<td class=text-end>${p}`;
               }
+              average = fallback ? "unknown" : (sum / count).toFixed(2);
+              u("b", body);
             }
 
-            body ? (average = sum / count) : (body = `<tr><td colspan=3 class=p-5>No data`);
-
-            document.getElementById("f").innerHTML = `Hours: ${count}, Average Price: ${average.toFixed(2)} cent/kWh<br>Next Update: ${new Date(d.nextUpdate).toLocaleString()}`;
-            document.getElementById("b").innerHTML = body;
+            u("f", `Hours: ${count}, Average Price: ${average} ct/kWh<br>Next Update: ${new Date(d.n).toLocaleString()}`);
           });
       }
 

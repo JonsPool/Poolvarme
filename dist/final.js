@@ -12,6 +12,7 @@ let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
 let blockMode = true; // set calculation mode
 let priceLimit = Infinity; // in cent/kWh
+let useFallback = true; // if true, use fallback when price retrieval fails
 
 // change this function to display prices according to the conditions of your contract
 function priceModifier(spotPrice) {
@@ -35,7 +36,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 let t = {};
 let rOff = Math.ceil(Math.random() * 300000);
 let next = 0;
-let html = atob("H4sIAAAAAAACA3VTh5LzKAx+FX5fMxMb/70arvfee8Egx+xi8IDSJpN3P3Da1d0E1PXxSWnvaK9wNwEZcLSizSfREmXdxRoHGIFrGW5FOwJK4mTS1wY2kw9IlHcIDnmxMRoHrmFtFNSzUhln0EhbRyUt8HuFaK1xt2QI0PMBcYrPm0Zpx26iBmvWgTnAxk1j03mPEYOc3njEHrAHjTYRGxXj1cFG41iykACWR9xZiAMAihYNWhBfTx7B2l3bHPW283pHlJUx8kLXvYUtyUetvF2NjiBssVbgEEJCOUrjzsFz1DL4TX2PjFg/IGNXP0oxKDsL56CjMp9154OGAPqkJrRmStqmliv0ZNzOdy4wgNTEaD4kOcPLcicS4pyX7oxCtL33COHcqFvWUzCjDDvSmy3o1A3Rj0XO7UUbVWqGwgKS3odR4gd+FThygQz9N2aErxMatywpi9YoKO9Wj+gLGXdOkX7lFBrviC3pvgdUQ7kxTvsNs17J7GF5bizAZGVKLeKJ4qIq8qoUlDIcwJVzt5voXfkXyz5DAl4UleN3K5++gd99ob1ajeCQLQHftZDFt3Yf6rIYCsqMcxA++ObTT/gfLYbMF1Hexkk6/kB84TcQyOcrnFZI8sNm0vKjydcbk8CTl/fI4ix++M7hVEC8IxHynWnJd554c/v98MeLlFmuZfhZVvZX35PPuxtQyJI7GIglMkw9YqLNByxLrIBygT/f/bWGdFDqVtbe4dy++mrpFovKL7itJHewIblj+dlq7CCUktIKFufnaPHyXjL0nyR6LeS483AOR+d1ginzUP/NcCktM3eZgJIuHjyGR3TOPq3LvNXgtPhjYVOn9/LGlPcpfQGvB+4b9xx4cQJz5faUO9WPxGeezKOt/ndQ/d8HlbHF54l7d6jIm2sIcgnki2AUZGP4C4YDOXPfdkF8loCSb6fULAX+sbi8DplLnqODnrm68PT/sLq/wYIDPZx22Tvrpea2bU4/lT8By72VTvsEAAA="); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA01TB7OkKBD+KzwuSY3iC5dH3Ms553yH0o7sQ7CgHWdq1v9+MGm3AnTur/uD6ka5FvcjkB4HU1fpJEqiLJpQYA8DCCX9Y10NgJJYGfWthnl0HknrLIJFQWetsBcKtrqF4qjk2mrU0hShlQbEHa0ro+0j6T10okccw7tl2SrLnwYFRm89t4ClHYeycQ4Dejm+9wZ/4A+l0gHLNoTnDj5oy6OFeDAi4N5A6AGwrlCjgfrH0SEYs6/Kk141Tu1Ja2QIgqqiM7Aj6ShaZ6bBEoQdFi1YBB9RDlLbS/AxauPdXNyRAYsHMjTFGzEGZWPgEnRSjmfROK/AgzqrEa0eozYXckJHht3xTgV6kIpoJfooJ3hJbuqIOOXFO6Goq845BH9p1GyK0etB+j3p9A5U7IboBppyu7oKbWyGtQEknUBRI0f3kx7gxwjCbjLGg4nsZLf5GyyfRIY5MFFH7qcBLPIN4McGkvjB/nOVIePaWvCf/fT1VwLWMuxtS7rJtqidJSZjhw6w7bNZW+Vmblwrk4cnermH0cjYioYzEzSn6UVRxjj2YLOELhLvbPaC5ZCQO3GbS3G7njLa0/y/Cn1aFolMhVFa8VB/52bw5NsJxwlJGu+0/s558uOsIyTy8gF5WM6Z9UcSId2fucmnu8Xy8df+P7beSk+8+LZ5Ci1ysOg1hAx5HLzTBsEnSNR1Hb0RAv+8+zvuz3nMznvDP2//LiAebK27zHMDdoM9O86AgtIc4iBW3NytI7Is9vrT5Ppv1xHPDm61yu2zZ7SgQgj9JEbdvpvBSuhcC83RfZLIze4ZWxthYSZphOybaWgiKBOtuBLnxaj65YOJGV+59Mli3JXs5eTsYsJSpPtayCSq0+Iytnp4E95gx9jzGzt+BbCq/m+lFynsEzrZR+tmSyPC0rEX0OWRoobmyBYwAchJo2dczwk7Fx6LN+pvHDm9gsRuF9lNnIR3I2Fuycn7W/ByA+Q7r1tIRrmQE1lV4+tvIjDy8xjzo++/1XUa5JZdF3AZni1sOT9MZ42TSpiqPH+P/wFG7CGN7wQAAA=="); // placeholder for compressed html - used by build script
 
 function log(msg, sendTelegram) {
   print(msg);
@@ -84,6 +85,7 @@ function getP(win) {
 
 function prcP(res, errc, errm, win) {
   let data;
+  let fbm = false;
 
   let err = "";
   if (errc !== 0) {
@@ -108,8 +110,19 @@ function prcP(res, errc, errm, win) {
       next = now + per;
       print(err + "Trying again at " + new Date(next).toString());
       Timer.set(per, false, getP, win);
+      return;
     }
-    return;
+    if (!useFallback) return;
+    // no prices retrieved and useFallback is true - do the fallback
+    fbm = true;
+    let fbp = [
+      0.625, 0.577, 0.556, 0.54, 0.548, 0.605, 0.741, 0.839, 0.805, 0.679, 0.568, 0.496, 0.442,
+      0.415, 0.437, 0.527, 0.649, 0.806, 0.922, 1, 0.957, 0.828, 0.745, 0.658,
+    ];
+    data = [];
+    for (let i = win.start; i < win.end; i += 3600000) {
+      data.push({ start_timestamp: i, marketprice: fbp[new Date(i).getHours()] });
+    }
   }
 
   let sidx = 0;
@@ -142,13 +155,17 @@ function prcP(res, errc, errm, win) {
   }
 
   for (let ele of data.splice(sidx, dur)) {
+    if (fbm) {
+      t[ele.start_timestamp] = "-"; // we don't know the price in fallback mode
+      continue;
+    }
     let p = priceModifier(ele.marketprice / 10);
     if (p <= priceLimit) t[ele.start_timestamp] = p;
   }
 
   for (let key of Object.keys(t)) {
     let hour = Number(key) + 3600000;
-    if (!(hour in t)) t[hour] = null; // set switch off markers
+    if (!(hour in t)) t[hour] = "off"; // set switch off markers
   }
 
   log("Timetable has been updated.", sendSchedule);
@@ -227,9 +244,9 @@ function spEP(req, res) {
 function dtEP(req, res) {
   res.headers = [["Content-Type", "application/json"]];
   res.body = JSON.stringify({
-    nextUpdate: next,
-    switchID: switchID,
-    times: t,
+    n: next,
+    s: switchID,
+    t: t,
   });
   res.send();
 }
