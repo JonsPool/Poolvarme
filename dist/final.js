@@ -196,7 +196,14 @@ function hrly() {
 }
 
 function init() {
+  if (Shelly.getComponentStatus("sys").unixtime === null) {
+    print("Time not synchronized, waiting one second...");
+    Timer.set(1000, false, init);
+    return;
+  }
   next = getH(Date.now(), 15) + rOff;
+  HTTPServer.registerEndpoint("spotelly", spEP);
+  HTTPServer.registerEndpoint("data", dtEP);
   Shelly.call("Schedule.List", {}, function (res) {
     let sid = Shelly.getCurrentScriptId();
     let mthd = "Schedule.Update";
@@ -250,8 +257,5 @@ function dtEP(req, res) {
   });
   res.send();
 }
-
-HTTPServer.registerEndpoint("spotelly", spEP);
-HTTPServer.registerEndpoint("data", dtEP);
 
 init();
