@@ -185,7 +185,7 @@ function hrly() {
   let hour = now - (now % 3600000);
 
   if (hour in t) {
-    set(t[hour] !== null);
+    set(t[hour] !== "off");
     delete t[hour];
   }
 
