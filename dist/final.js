@@ -169,14 +169,14 @@ function prcP(res, errc, errm, win) {
   }
 
   log("Timetable has been updated.", sendSchedule);
-  next = getH(next, 15) + rOff;
+  next = getH(now, 15) + rOff;
 }
 
-function clcW() {
+function clcW(offs) {
   let strt = getH(Date.now(), timeWindowStartHour);
   let end = getH(strt, timeWindowEndHour);
 
-  Timer.set(rOff, false, getP, { start: strt, end: end });
+  Timer.set(offs || rOff, false, getP, { start: strt, end: end });
 }
 
 // eslint-disable-next-line no-unused-vars
