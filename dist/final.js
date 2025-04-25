@@ -33,10 +33,35 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
-let t = {};
+let hrs = [];
 let rOff = Math.ceil(Math.random() * 300000);
 let next = 0;
-let html = atob("H4sIAAAAAAACA01TB7OkKBD+KzwuSY3iC5dH3Ms553yH0o7sQ7CgHWdq1v9+MGm3AnTur/uD6ka5FvcjkB4HU1fpJEqiLJpQYA8DCCX9Y10NgJJYGfWthnl0HknrLIJFQWetsBcKtrqF4qjk2mrU0hShlQbEHa0ro+0j6T10okccw7tl2SrLnwYFRm89t4ClHYeycQ4Dejm+9wZ/4A+l0gHLNoTnDj5oy6OFeDAi4N5A6AGwrlCjgfrH0SEYs6/Kk141Tu1Ja2QIgqqiM7Aj6ShaZ6bBEoQdFi1YBB9RDlLbS/AxauPdXNyRAYsHMjTFGzEGZWPgEnRSjmfROK/AgzqrEa0eozYXckJHht3xTgV6kIpoJfooJ3hJbuqIOOXFO6Goq845BH9p1GyK0etB+j3p9A5U7IboBppyu7oKbWyGtQEknUBRI0f3kx7gxwjCbjLGg4nsZLf5GyyfRIY5MFFH7qcBLPIN4McGkvjB/nOVIePaWvCf/fT1VwLWMuxtS7rJtqidJSZjhw6w7bNZW+Vmblwrk4cnermH0cjYioYzEzSn6UVRxjj2YLOELhLvbPaC5ZCQO3GbS3G7njLa0/y/Cn1aFolMhVFa8VB/52bw5NsJxwlJGu+0/s558uOsIyTy8gF5WM6Z9UcSId2fucmnu8Xy8df+P7beSk+8+LZ5Ci1ysOg1hAx5HLzTBsEnSNR1Hb0RAv+8+zvuz3nMznvDP2//LiAebK27zHMDdoM9O86AgtIc4iBW3NytI7Is9vrT5Ppv1xHPDm61yu2zZ7SgQgj9JEbdvpvBSuhcC83RfZLIze4ZWxthYSZphOybaWgiKBOtuBLnxaj65YOJGV+59Mli3JXs5eTsYsJSpPtayCSq0+Iytnp4E95gx9jzGzt+BbCq/m+lFynsEzrZR+tmSyPC0rEX0OWRoobmyBYwAchJo2dczwk7Fx6LN+pvHDm9gsRuF9lNnIR3I2Fuycn7W/ByA+Q7r1tIRrmQE1lV4+tvIjDy8xjzo++/1XUa5JZdF3AZni1sOT9MZ42TSpiqPH+P/wFG7CGN7wQAAA=="); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA01TB7OkKBD+KzwuSY3iC5dH2Ms553yH0o7cIFjQk2rW/74wYd9W6Bw++8PmRvsODxOQAUcrmyyJVqiqNlY4wAhCq7CWzQioiFPJ3xrYTT4g6bxDcCjozmgchIat6aA6OaVxBo2yVeyUBXFHZWONW5MhQC8GxCm+W9eddvz/qMGabeAOsHbTWLfeY8Sgpvfe4A/8odYmYt3F+Jjgo3E8RUgAKyIeLMQBAGWDBi3IHyePYO2hqc9+03p9IJ1VMQqqq97CnmRRdd5uRkcQ9lh14BBCQjkq467Fp6pV8LvqjoxYPZCxrd5INahaC9eis3OSVeuDhgD64ia0ZkrerlIb9GTcn3QeMIDSxGgxJDvDy3YrE+Lcl3RGIZvee4RwXdSuqimYUYUD6c0edNqG6Eeae3vZxC4tQ2kBSS9QSOTofzIj/JhAuFXBeLSJneK2fIOVG1FgCUzIxP1mBId8BfixhWx+cPhcF8i4cQ7CZz99/ZWApYoH15F+4zo03hFbsGMP2A3Fzjjtd9z6TuUMz/TyAJNVaRWNFyZoSfOLooxxHMAVGV0i3rvihcgxI/fitlTidrkp6EDL/xoM+VgkMRUn5cSD/M7vIJBvNzhtkOTPO5+/94H8uDMJEnn5iDzOl075kULI+jO/CVl3WK9/Hf5jy60KxArkyHtjEUKGcHN3IwT+ef93OpYPWFyOhH/e/l1BEmxp+sJyC26FAzsBRkFpCQm1Ezd3ywSjSIP/DKX52/fEsqNfLEr39CmtqBDCPElVt+8WsBCmNMJw9J9kJot7xpZBONiRjLcIbIkLcfl6LV8+hlT5VbqxhZy/Mjqfk32qn6usHwdkPvN1CrZ4eBPeYKfay0M6vXdwWv63MLMS7gnduLXzO0cTstqzF1CViYeWlshmsBHI2aMXXI+sXAZP1RvyG0/OVGcK+0RhPnx8N7Hi55K8v4WgVkC+C6aDHFQzOTPStEF+k4CRn6fUn3L/LZ5/DXLHnh/g+vFsZvPl9XlnvdLCNvXlH3gGS4fgdNQEAAA="); // placeholder for compressed html - used by build script
+
+function getIndex(ts) {
+  let idx = 0;
+  for (let ele of hrs) {
+    if (ele[0] === ts) return idx;
+    idx++;
+  }
+  return null;
+}
+
+function updateAdd(ts, prc, on) {
+  let idx = getIndex(ts);
+  idx === null ? hrs.push([ts, prc, on]) : (hrs[idx] = [ts, prc, on]);
+}
+
+function hours() {
+  return hrs.map(function (ele) {
+    return ele[0];
+  });
+}
+
+function take(idx) {
+  let ele = hrs.splice(idx, 1)[0];
+  return { ts: ele[0], prc: ele[1], on: ele[2] };
+}
 
 function log(msg, sendTelegram) {
   print(msg);
@@ -156,16 +181,17 @@ function prcP(res, errc, errm, win) {
 
   for (let ele of data.splice(sidx, dur)) {
     if (fbm) {
-      t[ele.start_timestamp] = "-"; // we don't know the price in fallback mode
+      updateAdd(ele.start_timestamp, "-", true); // we don't know the price in fallback mode
       continue;
     }
     let p = priceModifier(ele.marketprice / 10);
-    if (p <= priceLimit) t[ele.start_timestamp] = p;
+    if (p <= priceLimit) updateAdd(ele.start_timestamp, p, true);
   }
 
-  for (let key of Object.keys(t)) {
-    let hour = Number(key) + 3600000;
-    if (!(hour in t)) t[hour] = "off"; // set switch off markers
+  let keys = hours();
+  for (let key of keys) {
+    let hour = key + 3600000;
+    if (getIndex(hour) === null) updateAdd(hour, null, false); //
   }
 
   log("Timetable has been updated.", sendSchedule);
@@ -184,9 +210,9 @@ function hrly() {
   let now = Date.now();
   let hour = now - (now % 3600000);
 
-  if (hour in t) {
-    set(t[hour] !== "off");
-    delete t[hour];
+  let idx = getIndex(hour);
+  if (idx !== null) {
+    set(take(idx).on);
   }
 
   // start calculation for next time window at 15:00
@@ -253,7 +279,7 @@ function dtEP(req, res) {
   res.body = JSON.stringify({
     n: next,
     s: switchID,
-    t: t,
+    t: hrs,
   });
   res.send();
 }

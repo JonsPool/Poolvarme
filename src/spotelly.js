@@ -33,10 +33,35 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
-let t = {};
+let hrs = [];
 let rOff = Math.ceil(Math.random() * 300000);
 let next = 0;
 let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
+
+function getIndex(ts) {
+  let idx = 0;
+  for (let ele of hrs) {
+    if (ele[0] === ts) return idx;
+    idx++;
+  }
+  return null;
+}
+
+function updateAdd(ts, prc, on) {
+  let idx = getIndex(ts);
+  idx === null ? hrs.push([ts, prc, on]) : (hrs[idx] = [ts, prc, on]);
+}
+
+function hours() {
+  return hrs.map(function (ele) {
+    return ele[0];
+  });
+}
+
+function take(idx) {
+  let ele = hrs.splice(idx, 1)[0];
+  return { ts: ele[0], prc: ele[1], on: ele[2] };
+}
 
 function log(msg, sendTelegram) {
   print(msg);
@@ -156,16 +181,17 @@ function prcP(res, errc, errm, win) {
 
   for (let ele of data.splice(sidx, dur)) {
     if (fbm) {
-      t[ele.start_timestamp] = "-"; // we don't know the price in fallback mode
+      updateAdd(ele.start_timestamp, "-", true); // we don't know the price in fallback mode
       continue;
     }
     let p = priceModifier(ele.marketprice / 10);
-    if (p <= priceLimit) t[ele.start_timestamp] = p;
+    if (p <= priceLimit) updateAdd(ele.start_timestamp, p, true);
   }
 
-  for (let key of Object.keys(t)) {
-    let hour = Number(key) + 3600000;
-    if (!(hour in t)) t[hour] = "off"; // set switch off markers
+  let keys = hours();
+  for (let key of keys) {
+    let hour = key + 3600000;
+    if (getIndex(hour) === null) updateAdd(hour, null, false); //
   }
 
   log("Timetable has been updated.", sendSchedule);
@@ -184,9 +210,9 @@ function hrly() {
   let now = Date.now();
   let hour = now - (now % 3600000);
 
-  if (hour in t) {
-    set(t[hour] !== "off");
-    delete t[hour];
+  let idx = getIndex(hour);
+  if (idx !== null) {
+    set(take(idx).on);
   }
 
   // start calculation for next time window at 15:00
@@ -253,7 +279,7 @@ function dtEP(req, res) {
   res.body = JSON.stringify({
     n: next,
     s: switchID,
-    t: t,
+    t: hrs,
   });
   res.send();
 }
