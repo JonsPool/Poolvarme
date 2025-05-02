@@ -35,8 +35,13 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 let hrs = [];
 let rOff = Math.ceil(Math.random() * 300000);
-let next = 0;
+let timH = undefined;
 let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
+
+function next() {
+  let delay = Timer.getInfo(timH).next - Shelly.getUptimeMs();
+  return timH !== undefined ? Math.floor(Date.now()) + delay : 0;
+}
 
 function getIndex(ts) {
   let idx = 0;
@@ -44,23 +49,11 @@ function getIndex(ts) {
     if (ele[0] === ts) return idx;
     idx++;
   }
-  return null;
+  throw new Error("No record found for timestamp " + ts.toString());
 }
 
-function updateAdd(ts, prc, on) {
-  let idx = getIndex(ts);
-  idx === null ? hrs.push([ts, prc, on]) : (hrs[idx] = [ts, prc, on]);
-}
-
-function hours() {
-  return hrs.map(function (ele) {
-    return ele[0];
-  });
-}
-
-function take(idx) {
-  let ele = hrs.splice(idx, 1)[0];
-  return { ts: ele[0], prc: ele[1], on: ele[2] };
+function updS(ts, on) {
+  hrs[getIndex(ts)][2] = on;
 }
 
 function log(msg, sendTelegram) {
@@ -97,19 +90,18 @@ function getH(ts, hour) {
   ).getTime();
 }
 
-function getP(win) {
-  let qry = "?start=" + win.start + "&end=" + win.end;
+function getP(day) {
+  let qry = "?start=" + day.strt + "&end=" + day.end;
 
   Shelly.call(
     "http.get",
     { url: "https://api.awattar." + awattarCountry + "/v1/marketdata" + qry },
     prcP,
-    win,
+    day,
   );
 }
 
-function prcP(res, errc, errm, win) {
-  let data;
+function prcP(res, errc, errm, day) {
   let fbm = false;
 
   let err = "";
@@ -118,47 +110,54 @@ function prcP(res, errc, errm, win) {
   } else if (res.code !== 200) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
-    data = JSON.parse(res.body)["data"];
-    let exp = (win.end - win.start) / 3600000;
-    if (data.length !== exp) {
-      err = "Data error: " + data.length + " records instead of " + exp;
-    }
+    let rows = JSON.parse(res.body).data;
     res.body = null; // free up RAM
+    for (let rec of rows) {
+      hrs.push([rec.start_timestamp, priceModifier(rec.marketprice / 10), false]);
+    }
   }
 
-  let now = Math.floor(Date.now());
-
   if (err) {
-    if (win.start > now + 1800000) {
-      // retry only if window starts at least 30 minutes in the future
-      let per = 1200000;
-      next = now + per;
-      print(err + "Trying again at " + new Date(next).toString());
-      Timer.set(per, false, getP, win);
+    if (day.strt > Date.now() + 1800000) {
+      // retry only if day starts at least 30 minutes in the future
+      timH = Timer.set(1200000, false, getP, day);
+      print(err, "Trying again at", next().toString());
       return;
     }
-    if (!useFallback) return;
+    if (!useFallback) {
+      // no fallback; set timer for the next day
+      let now = Date.now();
+      let strt = getH(day.strt, 0);
+      let end = getH(strt, 0);
+      timH = Timer.set(getH(now, 15) - now + rOff, false, getP, { strt: strt, end: end });
+      return;
+    }
     // no prices retrieved and useFallback is true - do the fallback
     fbm = true;
     let fbp = [
-      0.625, 0.577, 0.556, 0.54, 0.548, 0.605, 0.741, 0.839, 0.805, 0.679, 0.568, 0.496, 0.442,
-      0.415, 0.437, 0.527, 0.649, 0.806, 0.922, 1, 0.957, 0.828, 0.745, 0.658,
+      7.56, 6.98, 6.73, 6.53, 6.63, 7.33, 8.97, 10.16, 9.74, 8.21, 6.87, 6.0, 5.35, 5.02, 5.28,
+      6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
     ];
-    data = [];
-    for (let i = win.start; i < win.end; i += 3600000) {
-      data.push({ start_timestamp: i, marketprice: fbp[new Date(i).getHours()] });
+    for (let h = day.strt, i = 0; h < day.end; h += 3600000, i++) {
+      hrs.push([h, fbp[i % 24], false]);
     }
   }
 
-  let sidx = 0;
-  let dur = Math.min(switchOnDuration, data.length);
+  let winS = timeWindowStartHour === 0 ? day.strt : getH(day.strt, timeWindowStartHour);
+  let winE = getH(winS, timeWindowEndHour);
+  let winH = (winE - winS) / 3600000;
+  let dur = Math.min(switchOnDuration, winH);
 
+  let firstIdx = getIndex(winS);
+  let data = hrs.slice(firstIdx, firstIdx + winH);
+
+  let sidx = 0;
   if (blockMode) {
     let lSum = Infinity;
     for (let i = 0, j = dur; j <= data.length; i++, j++) {
       let sSum = 0;
       data.slice(i, j).forEach(function (ele) {
-        sSum += ele.marketprice;
+        sSum += ele[1];
       });
       if (sSum < lSum) {
         sidx = i;
@@ -169,7 +168,7 @@ function prcP(res, errc, errm, win) {
     // move the <duration> elements with the lowest price to the end of the data array
     for (let i = 0; i < dur; i++) {
       for (let j = 1; j < data.length; j++) {
-        if (data[j].marketprice > data[j - 1].marketprice) {
+        if (data[j][1] > data[j - 1][1]) {
           let temp = data[j];
           data[j] = data[j - 1];
           data[j - 1] = temp;
@@ -181,43 +180,55 @@ function prcP(res, errc, errm, win) {
 
   for (let ele of data.splice(sidx, dur)) {
     if (fbm) {
-      updateAdd(ele.start_timestamp, "-", true); // we don't know the price in fallback mode
-      continue;
+      updS(ele[0], true);
+    } else {
+      if (ele[1] <= priceLimit) updS(ele[0], true);
     }
-    let p = priceModifier(ele.marketprice / 10);
-    if (p <= priceLimit) updateAdd(ele.start_timestamp, p, true);
   }
 
-  let keys = hours();
-  for (let key of keys) {
-    let hour = key + 3600000;
-    if (getIndex(hour) === null) updateAdd(hour, null, false); //
-  }
+  let now = Date.now();
+  let strt = getH(day.strt, 0);
+  let end = getH(strt, 0);
+  timH = Timer.set(getH(now, 15) - now + rOff, false, getP, { strt: strt, end: end });
 
   log("Timetable has been updated.", sendSchedule);
-  next = getH(now, 15) + rOff;
-}
-
-function clcW(offs) {
-  let strt = getH(Date.now(), timeWindowStartHour);
-  let end = getH(strt, timeWindowEndHour);
-
-  Timer.set(offs || rOff, false, getP, { start: strt, end: end });
 }
 
 // eslint-disable-next-line no-unused-vars
 function hrly() {
   let now = Date.now();
   let hour = now - (now % 3600000);
-
-  let idx = getIndex(hour);
-  if (idx !== null) {
-    set(take(idx).on);
+  try {
+    let ele = hrs.splice(getIndex(hour), 1)[0];
+    set(ele[2]);
+  } catch (error) {
+    print(error);
   }
+}
 
-  // start calculation for next time window at 15:00
-  if (new Date(hour).getHours() === 15) {
-    clcW();
+function spEP(req, res) {
+  res.headers = [
+    ["Content-Type", "text/html"],
+    ["Content-Encoding", "gzip"],
+  ];
+  res.body = html;
+  res.send();
+}
+
+function dtEP(req, res) {
+  if (req.method === "GET") {
+    res.headers = [["Content-Type", "application/json"]];
+    res.body = JSON.stringify({
+      n: next(),
+      s: switchID,
+      t: hrs,
+    });
+    res.send();
+  } else {
+    let data = JSON.parse(req.body);
+    updS(data.ts, data.on);
+    res.code = 200;
+    res.send();
   }
 }
 
@@ -227,9 +238,16 @@ function init() {
     Timer.set(1000, false, init);
     return;
   }
-  next = getH(Date.now(), 15) + rOff;
+
+  let now = Date.now();
+  let strt = getH(now, 0);
+  let end = getH(strt, 0);
+  let period = new Date(now).getHours() < 15 ? getH(now, 15) - now + rOff : 0;
+  timH = Timer.set(period, false, getP, { strt: strt, end: end });
+
   HTTPServer.registerEndpoint("spotelly", spEP);
   HTTPServer.registerEndpoint("data", dtEP);
+
   Shelly.call("Schedule.List", {}, function (res) {
     let sid = Shelly.getCurrentScriptId();
     let mthd = "Schedule.Update";
@@ -263,25 +281,6 @@ function init() {
 
     Shelly.call(mthd, schd);
   });
-}
-
-function spEP(req, res) {
-  res.headers = [
-    ["Content-Type", "text/html"],
-    ["Content-Encoding", "gzip"],
-  ];
-  res.body = html;
-  res.send();
-}
-
-function dtEP(req, res) {
-  res.headers = [["Content-Type", "application/json"]];
-  res.body = JSON.stringify({
-    n: next,
-    s: switchID,
-    t: hrs,
-  });
-  res.send();
 }
 
 init();
