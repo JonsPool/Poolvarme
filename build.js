@@ -28,7 +28,6 @@ const main = (htmlfile, sourceJS, targetJS) => {
     removeComments: true,
     removeOptionalTags: true,
   });
-  console.log(minified);
   console.log("Minified:", minified.length, "bytes");
 
   const compressed = Zopfli.gzipSync(minified);

@@ -34,6 +34,7 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
 let hrs = [];
+let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
 let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
@@ -44,16 +45,13 @@ function next() {
 }
 
 function getIndex(ts) {
-  let idx = 0;
-  for (let ele of hrs) {
-    if (ele[0] === ts) return idx;
-    idx++;
-  }
-  throw new Error("No record found for timestamp " + ts.toString());
+  let idx = (ts - anch) / 3600000;
+  if (idx < 0 || idx > hrs.length - 1) throw new Error("Index for " + ts + " was " + idx);
+  return idx;
 }
 
 function updS(ts, on) {
-  hrs[getIndex(ts)][2] = on;
+  hrs[getIndex(ts)][1] = on;
 }
 
 function log(msg, sendTelegram) {
@@ -112,9 +110,7 @@ function prcP(res, errc, errm, day) {
   } else {
     let body = JSON.parse(res.body);
     res.body = null; // free up RAM
-    for (let i = 0; i < body.unix_seconds.length; i++) {
-      hrs.push([body.unix_seconds[i] * 1000, priceModifier(body.price[i] / 10), false]);
-    }
+    for (let price of body.price) hrs.push([priceModifier(price / 10), false]);
   }
 
   if (err) {
@@ -139,17 +135,23 @@ function prcP(res, errc, errm, day) {
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
     ];
     for (let h = day.strt, i = 0; h < day.end; h += 3600000, i++) {
-      hrs.push([h, fbp[i % 24], false]);
+      hrs.push([fbp[i % 24], false]);
     }
   }
+
+  if (anch === 0) anch = day.strt;
 
   let winS = timeWindowStartHour === 0 ? day.strt : getH(day.strt, timeWindowStartHour);
   let winE = getH(winS, timeWindowEndHour);
   let winH = (winE - winS) / 3600000;
   let dur = Math.min(switchOnDuration, winH);
 
-  let firstIdx = getIndex(winS);
-  let data = hrs.slice(firstIdx, firstIdx + winH);
+  let data = [];
+  let idx = getIndex(winS);
+  hrs.slice(idx, idx + winH).forEach(function (ele) {
+    data.push([winS, ele[0], ele[1]]);
+    winS += 3600000;
+  });
 
   let sidx = 0;
   if (blockMode) {
@@ -198,11 +200,10 @@ function prcP(res, errc, errm, day) {
 function hrly() {
   let now = Date.now();
   let hour = now - (now % 3600000);
-  try {
-    let ele = hrs.splice(getIndex(hour), 1)[0];
-    set(ele[2]);
-  } catch (error) {
-    print(error);
+  if (hour === anch) {
+    let ele = hrs.splice(0, 1)[0];
+    set(ele[1]);
+    anch = hrs.length === 0 ? 0 : anch + 3600000;
   }
 }
 
@@ -219,6 +220,7 @@ function dtEP(req, res) {
   if (req.method === "GET") {
     res.headers = [["Content-Type", "application/json"]];
     res.body = JSON.stringify({
+      a: anch,
       n: next(),
       s: switchID,
       t: hrs,

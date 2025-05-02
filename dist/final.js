@@ -34,9 +34,10 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
 let hrs = [];
+let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
-let html = atob("H4sIAAAAAAACA21Uh9bjKA99FX7+LfZ+2EmmTxK8vfed3ocYJWY/DD6gtJPjd1/hePqcQhGydK905eX/tK/x2AFrsLXVMq1MK1TFKhbYQAtSq3BZLVtAxZyi+87AvvMBWe0dgkPJ90ZjIzXsTA3FcBHGGTTKFrFWFuSMV0tr3CVrAqxlg9jF+WRSa1f+GzVYswulA5y4rp2svMeIQXVfXS+vllcn2kSc1DG+eShb40qysABWRjxaiA0AVks0aKG603kEa4/Lyfm+XHl9ZLVVMUqui7WFA0tLUXu7bR1DOGBRg0MInGgq4145D16b4PfFjLVYXGXtqrhOPqhWFl45nS/DWqx80BBAj1dCazq67Qu1Rc/aw7CnAA0ozYyWDZ0HeHReVYQ4fUd7QlEt18QYwqtEq03RBdOqcGRrcwBN2RB9y9O362oZa0qGlQVk22Dl3jjt96X1tULjXZkKXwborKoh43GsERc89ZrnYiszFJDLiuSwbcFhuQH83kI6fnP8WWeYl8Y5CD/d/f03CcJIlJWDPftOIaRH9L/51Os7RNptKMWOixMFJwN1aM5j4wNygaZ9ZWlBm23L+1zgq+SnNWDdZERAnFrAxus5/+vPO3e5SFWa/3Lnzz/KOCQw62N2wjhH4d0c+rwnBA24jFC9Tz2A9UpneV6SoW6SCyk3egvksyHseb9Q8ehqtt66On3CbJa/gfImMpJcvcvy0QIE2KyzbcYbLl4uMaTOMpJV7JST16q//B4C+3OL3RbZXSJ+1sraB3Znbyg6++QEZezHL6tUyrT/5Lch7TVOLh806fSne5kLKLG04DbY5KedCswLK2rhZLK3qhsAPpk9y4WSvytsyHbIyrJ0uWhGg3FnwyKpBCXnC8KSPRkCPfNrRpHOobV8OQyW5MTGhzlros0+Oc2uTL/IZkVmiyafZIrWvBdsNp1+Ktj16af5gr9c4IUcS6GJnu6rT04m83kZrSHlTcVsmvcff5vNxOzGm8dR98N4gtPka0v0PyTpZ1cGt2qpzW50IyJtEYeqVkvjqOJvP9QN1JfF2Zx+dnIwrPyBMtVf8uEGms8575l33xKcS8mRGHvih42J5eiSc5pOylq97KntKy4w78FGYOcbH5m/EcGIoiuuV394dh62ofxBTkWU00XqHmH8Xp2VecInV5599lkWL2RqpggXF6TthZNZ+DJOwnyav1WEBWVdk/TugIUaQc+JTuhZ0k8U7OsdBLWBZHQ9G8W0CtUfVFF2ryMs9PbywmRAkqAk/Tg43qV5kXY5Gf8p/wE85fwsJAYAAA=="); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA21UB5fjJhD+K4Q0KYtk+/rZQum953o/LMYrsgj0YNyen/57Blmb/gpl6jczH1TvaN/gsQfWYmfrKq1MK1TFOhbYQgdSq3BVVx2gYk7RfWdg3/uArPEOwaHke6OxlRp2poFivAjjDBpli9goC3LB68oad8XaABvZIvZxOZs12pW/Rw3W7ELpAGeu72Zr7zFiUP0nt8ub5c2ZNhFnTYx/KcrOuJIkLICVEY8WYguAdYUGLdQPeo9g7bGane/V2usja6yKUXJdbCwcWFqKxttt5xjCAYsGHELgVKYy7tp4tLoMfl8sWIfFTdati9tkg2pt4drofBnXYu2DhgB6uhJa09NtX6gtetYdxj0FaEFpZrRs6ZzgpfO6JsTJj/aEoq423hOo60Try6IPplPhyDbmAJqyIfqOJ99NXcWGkmFtAdk2WLk3Tvt9aX2j0HhXpsaXAXqrGsh4nHrEBU+z5rnYygwF5LImOmw7cFheAn5pIR0/O36rM8xL4xyEbx7++IMEYSTK2sGefaEQkhL9Dz7N+gEV7S4pxY6LEwUnAU1oyWPrA3KBpruWdKDNtuNDLvA6+WkD2LQZFSBOHWDr9ZL/8vODh1ykLi2/e/DzT2UcE5jNMTthXKLwbglDPhCCFlxGqP5degDrlc7yvCRB0yYTYm70FsjmkrDnw0rFo2vYZuua5MJslv8F5a/ISHT1LssniSfAZpNtM95y8bbCkCbLiFaxV07eqn/xewjs5y32W2QPqfAzVzY+sAd7Q9HZeydfxmHyrFMr0/6N34a0Nzi7etKm08/ubS58iaUFd4ltftqpwKxohJJJ2ql+hPdi/ioXTv6osCXZISvLUuWinQTGnQWrxBGUnAsgb7UiPNkLCvbKbxhFOwfX8u34tCSnenxYsjba7L3T4sb8o2xRZLZo81nmaM0HwRbz+fuC3Z6/n6/42xVeyKkZmgrUQ/3eyWSQl9GaBrK5WMzz4f91i4VY3PlLOTF/fKDgNNnaEv1XifzZjdGsrrTZTWZURlfEsa91ZRz1/O+KpoXmqjiL03cnR8HaHyhT8zEfb6D5kvOBefc5wbmSHKlioPqwNbGcTHJO75Oy1m8FXMibd+D2QARYc4H5ADYCO9/41IG/6DCh6Yvb9U+enZ/dOAqQcxHkfJUmSVi/VGeOnvDF4tUHH2ThQqbBUrYLYvlKyQw+DjNYzvO/NWNFWTdEwgdgoUHQS5aQs8SkKNinOwjqEpJQDWyi1TrUP1Fn2aOesJDu7YXJfOlySjJMT8i79HKkrWbT7/IHhUMPRS4GAAA="); // placeholder for compressed html - used by build script
 
 function next() {
   let delay = Timer.getInfo(timH).next - Shelly.getUptimeMs();
@@ -44,16 +45,13 @@ function next() {
 }
 
 function getIndex(ts) {
-  let idx = 0;
-  for (let ele of hrs) {
-    if (ele[0] === ts) return idx;
-    idx++;
-  }
-  throw new Error("No record found for timestamp " + ts.toString());
+  let idx = (ts - anch) / 3600000;
+  if (idx < 0 || idx > hrs.length - 1) throw new Error("Index for " + ts + " was " + idx);
+  return idx;
 }
 
 function updS(ts, on) {
-  hrs[getIndex(ts)][2] = on;
+  hrs[getIndex(ts)][1] = on;
 }
 
 function log(msg, sendTelegram) {
@@ -112,9 +110,7 @@ function prcP(res, errc, errm, day) {
   } else {
     let body = JSON.parse(res.body);
     res.body = null; // free up RAM
-    for (let i = 0; i < body.unix_seconds.length; i++) {
-      hrs.push([body.unix_seconds[i] * 1000, priceModifier(body.price[i] / 10), false]);
-    }
+    for (let price of body.price) hrs.push([priceModifier(price / 10), false]);
   }
 
   if (err) {
@@ -139,17 +135,23 @@ function prcP(res, errc, errm, day) {
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
     ];
     for (let h = day.strt, i = 0; h < day.end; h += 3600000, i++) {
-      hrs.push([h, fbp[i % 24], false]);
+      hrs.push([fbp[i % 24], false]);
     }
   }
+
+  if (anch === 0) anch = day.strt;
 
   let winS = timeWindowStartHour === 0 ? day.strt : getH(day.strt, timeWindowStartHour);
   let winE = getH(winS, timeWindowEndHour);
   let winH = (winE - winS) / 3600000;
   let dur = Math.min(switchOnDuration, winH);
 
-  let firstIdx = getIndex(winS);
-  let data = hrs.slice(firstIdx, firstIdx + winH);
+  let data = [];
+  let idx = getIndex(winS);
+  hrs.slice(idx, idx + winH).forEach(function (ele) {
+    data.push([winS, ele[0], ele[1]]);
+    winS += 3600000;
+  });
 
   let sidx = 0;
   if (blockMode) {
@@ -198,11 +200,10 @@ function prcP(res, errc, errm, day) {
 function hrly() {
   let now = Date.now();
   let hour = now - (now % 3600000);
-  try {
-    let ele = hrs.splice(getIndex(hour), 1)[0];
-    set(ele[2]);
-  } catch (error) {
-    print(error);
+  if (hour === anch) {
+    let ele = hrs.splice(0, 1)[0];
+    set(ele[1]);
+    anch = hrs.length === 0 ? 0 : anch + 3600000;
   }
 }
 
@@ -219,6 +220,7 @@ function dtEP(req, res) {
   if (req.method === "GET") {
     res.headers = [["Content-Type", "application/json"]];
     res.body = JSON.stringify({
+      a: anch,
       n: next(),
       s: switchID,
       t: hrs,

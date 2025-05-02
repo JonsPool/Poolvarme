@@ -37,23 +37,25 @@
             if (!d.t.length) {
               u("b", "<tr><td colspan=4 class=p-5>No data");
             } else {
-              const prices = d.t.map(x => x[1]);
+              const prices = d.t.map(x => x[0]);
               const max = Math.max(...prices);
               const min = Math.min(...prices);
               let body = "";
+              let h = d.a;
 
-              for (const [h, p, o] of d.t) {
+              for (const [p, o] of d.t) {
                 const hue = (1 - (p - min) / (max - min)) * 120;
                 const s = `style="color: hsl(${hue}, 100%, 50%);"`;
                 body += `<tr><td ${s}>${i(h).slice(0, 10)}<td ${s}>${i(h).slice(11, 16)}<td ${s} class=text-end>${p.toFixed(2)}<td><div class=form-switch><input class=form-check-input type=checkbox ${o ? "checked" : ""} onClick="t(${h}, this.checked)"></div>`;
+                h += 3600000;
               }
               u("b", body);
             }
             let count = 0;
             let sum = 0;
             d.t.forEach(x => {
-              if (x[2]) {
-                sum += x[1];
+              if (x[1]) {
+                sum += x[0];
                 count++;
               }
             });
