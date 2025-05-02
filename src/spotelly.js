@@ -88,6 +88,13 @@ function getH(ts, hour) {
   ).getTime();
 }
 
+function setT(time, strt) {
+  timH = Timer.set(time === 0 ? 0 : time - Date.now(), false, getP, {
+    strt: strt,
+    end: getH(strt, 0),
+  });
+}
+
 function getP(day) {
   let qry = "&start=" + day.strt / 1000 + "&end=" + (day.end / 1000 - 3600);
 
@@ -122,10 +129,7 @@ function prcP(res, errc, errm, day) {
     }
     if (!useFallback) {
       // no fallback; set timer for the next day
-      let now = Date.now();
-      let strt = getH(day.strt, 0);
-      let end = getH(strt, 0);
-      timH = Timer.set(getH(now, 15) - now + rOff, false, getP, { strt: strt, end: end });
+      setT(getH(Date.now(), 15) + rOff, getH(day.strt, 0));
       return;
     }
     // no prices retrieved and useFallback is true - do the fallback
@@ -188,10 +192,7 @@ function prcP(res, errc, errm, day) {
     }
   }
 
-  let now = Date.now();
-  let strt = getH(day.strt, 0);
-  let end = getH(strt, 0);
-  timH = Timer.set(getH(now, 15) - now + rOff, false, getP, { strt: strt, end: end });
+  setT(getH(Date.now(), 15) + rOff, getH(day.strt, 0));
 
   log("Timetable has been updated.", sendSchedule);
 }
@@ -242,10 +243,7 @@ function init() {
   }
 
   let now = Date.now();
-  let strt = getH(now, 0);
-  let end = getH(strt, 0);
-  let period = new Date(now).getHours() < 15 ? getH(now, 15) - now + rOff : 0;
-  timH = Timer.set(period, false, getP, { strt: strt, end: end });
+  setT(new Date(now).getHours() < 15 ? getH(now, 15) + rOff : 0, getH(now, 0));
 
   HTTPServer.registerEndpoint("spotelly", spEP);
   HTTPServer.registerEndpoint("data", dtEP);
