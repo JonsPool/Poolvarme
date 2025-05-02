@@ -5,7 +5,7 @@
 
 // <<<<< START OF CONFIGURATION - change values below to your preference >>>>>
 
-let awattarCountry = "at"; // at for Austrian or de for German API
+let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
 let switchOnDuration = 4; // minimum 1, maximum 24
 let timeWindowStartHour = 7; // minimum 0, maximum 23
@@ -91,11 +91,11 @@ function getH(ts, hour) {
 }
 
 function getP(day) {
-  let qry = "?start=" + day.strt + "&end=" + day.end;
+  let qry = "&start=" + day.strt / 1000 + "&end=" + (day.end / 1000 - 3600);
 
   Shelly.call(
     "http.get",
-    { url: "https://api.awattar." + awattarCountry + "/v1/marketdata" + qry },
+    { url: "https://api.energy-charts.info/price?bzn=" + epexBZN + qry },
     prcP,
     day,
   );
@@ -110,10 +110,10 @@ function prcP(res, errc, errm, day) {
   } else if (res.code !== 200) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
-    let rows = JSON.parse(res.body).data;
+    let body = JSON.parse(res.body);
     res.body = null; // free up RAM
-    for (let rec of rows) {
-      hrs.push([rec.start_timestamp, priceModifier(rec.marketprice / 10), false]);
+    for (let i = 0; i < body.unix_seconds.length; i++) {
+      hrs.push([body.unix_seconds[i] * 1000, priceModifier(body.price[i] / 10), false]);
     }
   }
 
