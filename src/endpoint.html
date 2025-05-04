@@ -20,50 +20,53 @@
       const u = (x, y) => (document.getElementById(x).innerHTML = y);
       const i = ts => new Date(ts).toLocaleString("sv", { dateStyle: "short", timeStyle: "medium" });
 
-      // eslint-disable-next-line no-unused-vars
-      const t = (h, on) => {
-        fetch(url, { method: "POST", body: JSON.stringify({ ts: h, on: on }) })
-          // eslint-disable-next-line no-unused-vars
-          .then(r => window.location.reload())
-          .catch(error => console.log(error));
+      const m = d => {
+        console.log("m called!")
+        u("h", `<tr><th colspan=4>Power Output Timetable for Switch ${d.s}<tr><th>Date<th>Hour<th>ct/kWh<th>On`);
+
+        if (!d.t.length) {
+          u("b", "<tr><td colspan=4 class=p-5>No data");
+        } else {
+          const prices = d.t.map(x => x[0]);
+          const max = Math.max(...prices);
+          const min = Math.min(...prices);
+          let body = "";
+          let h = d.a;
+
+          for (const [p, o] of d.t) {
+            const hue = (1 - (p - min) / (max - min)) * 120;
+            const s = `style="color: hsl(${hue}, 100%, 50%);"`;
+            body += `<tr><td ${s}>${i(h).slice(0, 10)}<td ${s}>${i(h).slice(11, 16)}<td ${s} class=text-end>${p.toFixed(2)}<td><div class=form-switch><input class=form-check-input type=checkbox ${o ? "checked" : ""} onClick="t(${h}, this.checked)"></div>`;
+            h += 3600000;
+          }
+          u("b", body);
+        }
+        let count = 0;
+        let sum = 0;
+        d.t.forEach(x => {
+          if (x[1]) {
+            sum += x[0];
+            count++;
+          }
+        });
+        const average = (count ? sum / count : 0).toFixed(2);
+
+        u("f", `Selected: ${count} Hours, Average: ${average} ct/kWh<br>Next Update: ${i(d.n)}`);
       };
 
       async function l() {
         fetch(url)
           .then(r => r.json())
-          .then(d => {
-            u("h", `<tr><th colspan=4>Power Output Timetable for Switch ${d.s}<tr><th>Date<th>Hour<th>ct/kWh<th>On`);
-
-            if (!d.t.length) {
-              u("b", "<tr><td colspan=4 class=p-5>No data");
-            } else {
-              const prices = d.t.map(x => x[0]);
-              const max = Math.max(...prices);
-              const min = Math.min(...prices);
-              let body = "";
-              let h = d.a;
-
-              for (const [p, o] of d.t) {
-                const hue = (1 - (p - min) / (max - min)) * 120;
-                const s = `style="color: hsl(${hue}, 100%, 50%);"`;
-                body += `<tr><td ${s}>${i(h).slice(0, 10)}<td ${s}>${i(h).slice(11, 16)}<td ${s} class=text-end>${p.toFixed(2)}<td><div class=form-switch><input class=form-check-input type=checkbox ${o ? "checked" : ""} onClick="t(${h}, this.checked)"></div>`;
-                h += 3600000;
-              }
-              u("b", body);
-            }
-            let count = 0;
-            let sum = 0;
-            d.t.forEach(x => {
-              if (x[1]) {
-                sum += x[0];
-                count++;
-              }
-            });
-            const average = (count ? sum / count : 0).toFixed(2);
-
-            u("f", `Selected: ${count} Hours, Average: ${average} ct/kWh<br>Next Update: ${i(d.n)}`);
-          });
+          .then(d => m(d));
       }
+
+      // eslint-disable-next-line no-unused-vars
+      const t = (h, on) => {
+        fetch(url, { method: "POST", body: JSON.stringify({ ts: h, on: on }) })
+          .then(r => r.json())
+          .then(d => m(d))
+          .catch(error => console.log(error));
+      };
 
       window.onload = l;
     </script>

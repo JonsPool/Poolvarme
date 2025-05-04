@@ -46,7 +46,7 @@ function next() {
 
 function getIndex(ts) {
   let idx = (ts - anch) / 3600000;
-  if (idx < 0 || idx > hrs.length - 1) throw new Error("Index for " + ts + " was " + idx);
+  if (idx < 0 || idx > hrs.length - 1) throw new Error("No index for " + ts + "; anch: " + anch);
   return idx;
 }
 
@@ -218,21 +218,23 @@ function spEP(req, res) {
 }
 
 function dtEP(req, res) {
-  if (req.method === "GET") {
-    res.headers = [["Content-Type", "application/json"]];
-    res.body = JSON.stringify({
-      a: anch,
-      n: next(),
-      s: switchID,
-      t: hrs,
-    });
-    res.send();
-  } else {
+  if (req.method === "POST") {
     let data = JSON.parse(req.body);
-    updS(data.ts, data.on);
-    res.code = 200;
-    res.send();
+    try {
+      updS(data.ts, data.on);
+    } catch (error) {
+      print(error.message);
+    }
   }
+  res.headers = [["Content-Type", "application/json"]];
+  res.body = JSON.stringify({
+    a: anch,
+    n: next(),
+    s: switchID,
+    t: hrs,
+  });
+  res.code = 200;
+  res.send();
 }
 
 function init() {

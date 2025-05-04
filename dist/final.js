@@ -37,7 +37,7 @@ let hrs = [];
 let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
-let html = atob("H4sIAAAAAAACA21UB5fjJhD+K4Q0KYtk+/rZQum953o/LMYrsgj0YNyen/57Blmb/gpl6jczH1TvaN/gsQfWYmfrKq1MK1TFOhbYQgdSq3BVVx2gYk7RfWdg3/uArPEOwaHke6OxlRp2poFivAjjDBpli9goC3LB68oad8XaABvZIvZxOZs12pW/Rw3W7ELpAGeu72Zr7zFiUP0nt8ub5c2ZNhFnTYx/KcrOuJIkLICVEY8WYguAdYUGLdQPeo9g7bGane/V2usja6yKUXJdbCwcWFqKxttt5xjCAYsGHELgVKYy7tp4tLoMfl8sWIfFTdati9tkg2pt4drofBnXYu2DhgB6uhJa09NtX6gtetYdxj0FaEFpZrRs6ZzgpfO6JsTJj/aEoq423hOo60Try6IPplPhyDbmAJqyIfqOJ99NXcWGkmFtAdk2WLk3Tvt9aX2j0HhXpsaXAXqrGsh4nHrEBU+z5rnYygwF5LImOmw7cFheAn5pIR0/O36rM8xL4xyEbx7++IMEYSTK2sGefaEQkhL9Dz7N+gEV7S4pxY6LEwUnAU1oyWPrA3KBpruWdKDNtuNDLvA6+WkD2LQZFSBOHWDr9ZL/8vODh1ykLi2/e/DzT2UcE5jNMTthXKLwbglDPhCCFlxGqP5degDrlc7yvCRB0yYTYm70FsjmkrDnw0rFo2vYZuua5MJslv8F5a/ISHT1LssniSfAZpNtM95y8bbCkCbLiFaxV07eqn/xewjs5y32W2QPqfAzVzY+sAd7Q9HZeydfxmHyrFMr0/6N34a0Nzi7etKm08/ubS58iaUFd4ltftqpwKxohJJJ2ql+hPdi/ioXTv6osCXZISvLUuWinQTGnQWrxBGUnAsgb7UiPNkLCvbKbxhFOwfX8u34tCSnenxYsjba7L3T4sb8o2xRZLZo81nmaM0HwRbz+fuC3Z6/n6/42xVeyKkZmgrUQ/3eyWSQl9GaBrK5WMzz4f91i4VY3PlLOTF/fKDgNNnaEv1XifzZjdGsrrTZTWZURlfEsa91ZRz1/O+KpoXmqjiL03cnR8HaHyhT8zEfb6D5kvOBefc5wbmSHKlioPqwNbGcTHJO75Oy1m8FXMibd+D2QARYc4H5ADYCO9/41IG/6DCh6Yvb9U+enZ/dOAqQcxHkfJUmSVi/VGeOnvDF4tUHH2ThQqbBUrYLYvlKyQw+DjNYzvO/NWNFWTdEwgdgoUHQS5aQs8SkKNinOwjqEpJQDWyi1TrUP1Fn2aOesJDu7YXJfOlySjJMT8i79HKkrWbT7/IHhUMPRS4GAAA="); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA4VUBbPjNhD+KzqV7D7ZSY4vsVxm7jGfIm1i9cmSx9rQZPLfu3L8yjAgWPwWq2smaDx0wBpsXV2lkxmFqljGAhtoQRrVX9ZVC6iYV/TfWth1oUemg0fwKPnOGmykga3VUAwfYb1Fq1wRtXIgZ7yunPWXrOlhJRvELs4nE218+Us04Oy2Lz3gxHftZBkCRuxV9+Gt8kZ5Y2JsxImO8XdG2VpfEoX14GTEg4PYAGBdoUUH9f0uIDh3qCbnf7UM5sC0UzFKboqVgz1LR6GD27SeIeyx0OARekLZKuuvhAepdR92xYy1WNxg7bK4RTKolg6uhM6f4SyWoTfQgxm/hNZ29NsVaoOBtfvhTgYaUIZZIxt6J3jpvawJcdKjO6Goq1UIBOrK0XJddL1tVX9gK7sHQ94QQ8uT7qquoiZnWDtAtumd3Flvwq50QSu0wZcp8WUPnVMaMh7HHHHBU615LjYyQwG5rE3QmxY8lmvAzxyk58eHr0yGeWm9h/7LB999K0FYibL2sGOfKoTExPBtSLW+T0H7NbnYcnEk40SgCs15bEKPXKBtrygtGLtp+SkXrQyyPtpVpoOPwQHBJgstI3sOzLUEL+MNF28q7FP2GJUudsrLm/WPYQc9+2GD3QbZAzJ+rscq9Oz+zqJu2NvHUMbTqFknuOn+Mmz6dGucXD5u0usH/yYXocTSgV9jkx+3qmdOaOFloraqyyhkfD59mQslv1PYEG2flWXpc9GMBOvPhEWqA0rOBZC2WhCe7DkZexlWjKydjUf5ZmhfySme0M9ZE1329nF2ffp+NisyVzT5JFN05ifBZtPpO4Ldmr6TL/ibBV7IMRmGAoyn+u2jzSAvo7NU36mYTfPTP/NmMzG7/Ttz7K5hCMAbknUlhs9Tg2XXB7G6MnY7ilEYbRGHvNaV9ZTzPzJ0A/qyOJPTSpEDYRn25El/wIcfGD7n/MSC/4TgXEqOFDFQfNjYWI4iOacZIK/1GwEX8sZtuHWiBlhygfkJXAR2/vExA7+3w4imK27V3wc2tPa5FCCnwsjpIlWSsH6mdJOqecTns5fvvpuZC5kKS94u8lO+8DKDD8wE5tP8D8lYkNcVNeF9cKARzJwl5Cx1UhTsoy30ag2J6E9sbKtlX39PmWUPO8JCvDcXNgulp4IuVDx4zVYbr9N8MpflxxUgwaLpJa8N+KHdaEEGn+W/U9oMSf3cXuPI/q4oji1gE8yc//jD/QdcpN0y//r+D9+XcRhLuzpkR4xzFMHP4ZSf/tdTqRWec/XH2cQUwbhigndBGemqybiCfgXeHyj3UwYAAA=="); // placeholder for compressed html - used by build script
 
 function next() {
   let delay = Timer.getInfo(timH).next - Shelly.getUptimeMs();
@@ -46,7 +46,7 @@ function next() {
 
 function getIndex(ts) {
   let idx = (ts - anch) / 3600000;
-  if (idx < 0 || idx > hrs.length - 1) throw new Error("Index for " + ts + " was " + idx);
+  if (idx < 0 || idx > hrs.length - 1) throw new Error("No index for " + ts + "; anch: " + anch);
   return idx;
 }
 
@@ -218,21 +218,23 @@ function spEP(req, res) {
 }
 
 function dtEP(req, res) {
-  if (req.method === "GET") {
-    res.headers = [["Content-Type", "application/json"]];
-    res.body = JSON.stringify({
-      a: anch,
-      n: next(),
-      s: switchID,
-      t: hrs,
-    });
-    res.send();
-  } else {
+  if (req.method === "POST") {
     let data = JSON.parse(req.body);
-    updS(data.ts, data.on);
-    res.code = 200;
-    res.send();
+    try {
+      updS(data.ts, data.on);
+    } catch (error) {
+      print(error.message);
+    }
   }
+  res.headers = [["Content-Type", "application/json"]];
+  res.body = JSON.stringify({
+    a: anch,
+    n: next(),
+    s: switchID,
+    t: hrs,
+  });
+  res.code = 200;
+  res.send();
 }
 
 function init() {

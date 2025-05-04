@@ -31,10 +31,10 @@ const data = {
     [6.143, false],
     [1.353, false],
     [0.001, false],
-    [-0.001, false],
-    [-0.116, false],
-    [-0.304, false],
-    [-0.269, false],
+    [-0.001, true],
+    [-0.116, true],
+    [-0.304, true],
+    [-0.269, true],
     [-0.003, false],
     [0, false],
     [2.965, false],
@@ -107,15 +107,11 @@ const server = http.createServer((req, res) => {
     });
     req.on("end", () => {
       const upd = JSON.parse(body);
-      for (const row of data.t) {
-        if (row[0] === upd.ts) {
-          row[2] = upd.on;
-          break;
-        }
-      }
+      const idx = (upd.ts - data.a) / 3600000;
+      data.t[idx][1] = upd.on;
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ message: "received" }));
+      res.end(JSON.stringify(data));
     });
   } else {
     res.statusCode = 405;
