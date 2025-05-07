@@ -7,8 +7,8 @@ runs directly on the Shelly and the only technical requirement is that the Shell
 internet. The script should run on all Gen2+ Shelly switches.
 
 The goal of the script is to activate power output when prices are at their lowest during a
-predefined daily time window. Using configuration variables, you can set the time window and the
-number of hours that power output should be active. Example:
+predefined daily time window. You can use configuration variables to define the time window and the
+number of hours for which power output should be active. Example:
 
 You set the time window so that it starts at 7:00 and ends at 19:00; in addition, you define that
 power output should be active for 4 hours within this window.
@@ -21,8 +21,7 @@ and 19:00 and activate power output for this block.
 In non-block mode, the script will activate power output for the 4 cheapest hours between 7:00 and
 19:00 - independent of whether they are consecutive or not.
 
-The script provides an HTML endpoint that can be opened in the browser and shows the calculated
-schedule and the hourly prices:
+The calculated results can be reviewed and modified on the Web UI that is provided by the script:
 
 <p align="center">
   <img src="./images/Endpoint.png"/>
@@ -30,10 +29,12 @@ schedule and the hourly prices:
 
 There are some additional features:
 
+- If price data can not be downloaded due to technical issues, the script provides an optional
+  fallback mode to ensure that power is provided for the configured number of hours.
 - You can define a hard price limit (e.g. 10 cent/kWh) that must not be exceeded. If the price
   of any of the cheapest hours exceeds this limit, power output will not be activated for this hour.
-- You can define a custom formula to convert the EPEX spot price to the price that is actually
-  charged to you by your electricity provider.
+- You can define a custom formula to convert the EPEX spot price to the price that is charged to
+  you by your electricity provider.
 - Telegram integration: Optionally, the script can send you Telegram messages whenever the timetable
   has been updated and when power has been switched on or off by this script.
 - For multi-switch devices like the Shelly 2PM or 3PM, you can define which of the switches should
@@ -47,8 +48,8 @@ price data is made available depends on your location - see
 
 ## Installation
 
-Before you start the installation process, make sure that you have Firmware 1.4.4 or higher
-installed on the Shelly.
+Before you start the installation process, make sure that the firmware version on your Shelly is at
+least 1.5.0. Then, follow these steps:
 
 1. Enter the IP Address of your Shelly in the URL field of your browser.
 1. Select the `Scripts` Tab.
@@ -57,18 +58,26 @@ installed on the Shelly.
 1. (Optional): Enter a script name in the corresponding field.
 1. Change the configuration variables in the script to your preference (see next section for
    details).
-1. Click the `Save` button.
-1. Click the `Start` button. The script is now running.
+1. Click the `Save` and `Start`. The script is now running.
 1. Go back to the `Scripts` tab and make sure that the text below the script name says
    `Running`.<br>(Also take note of the Script number that the Shelly has automatically
    assigned to the script. You will use this number later to review information in your browser.)
 1. Activate the `Run on startup` switch to make sure that the script restarts after a
    reboot of the device.
 
-Note that the first calculation run after the installation will take place at approximately 15:00
-after the installation. You can see the next planned execution time by opening the URL
-`http://<ipAddress>/script/<scriptNumber>/spotelly` (you can find the script number on the
-`Scripts` tab of the WebUI as mentioned in step 9 above).
+## First start
+
+Once you have started the script, you can always look at the Web UI to see the current status. The
+Web UI can be opened in the browser with the URL `http://<ipAddress>/script/<scriptNumber>/spotelly`
+(you can find the script number on the `Scripts` tab of the WebUI as mentioned in step 8 above).
+
+If you have started the script before 15:00, the script schedules the first calculation for shortly
+after 15:00. If the first start occurs after 15:00, the script starts the first calculation
+immediately.
+
+It is always possible that a calculation fails because the price data for the next day is not yet
+available from the API. In that case, the script automatically schedules another attempt 20 minutes
+later. You can always see the time of the next planned update in the Web UI.
 
 ## Configuration
 
@@ -76,7 +85,7 @@ The behavior of the script can be customized by changing the following variables
 
 ### epexBZN (default `AT`)
 
-This defines the code of the EPEX bidding zone that should be used as source for the prices. A list
+This defines the code of the EPEX bidding zone that is used as source for the prices. A list
 of the available zones can be found in the
 [the energy-charts API documentation](https://api.energy-charts.info/)
 (expand the "Available bidding zones" dropdown).
@@ -85,37 +94,54 @@ The code of the bidding zone must be entered exactly as shown (capitalization is
 
 ### switchOnDuration (default `4`)
 
-The script will switch on power for the number of hours that is defined in this variable. Depending
-on the setting of the `blockMode` variable (see below), power will either be activated in one
+The script switches on power for the number of hours that is defined in this variable. Depending
+on the setting of the `blockMode` variable (see below), power is either activated in one
 contiguous block or spread out over the time window (depending on the prices).
 
 The switchOnDuration must be a whole number in the range of 1 to 24.
 
 ### timeWindowStartHour & timeWindowEndHour (default `7` & `19`)
 
-These two variables define the time window within which the cheapest hours will be found. The default time
-window is 7:00 to 19:00.<br><br>
-Both values must be whole numbers in the range of 0 to 23. If you want the time window to match the calendar day, set both values to zero.<br><br>
-The time window will go over midnight if the end hour is less than the start hour - e. g. a start hour of 20
-and an end hour of 4 sets a window from 20:00 to 4:00 on the following day.
+These two variables define the time window within which the cheapest hours are found. The
+default time window is 7:00 to 19:00.<br><br>
+Both values must be whole numbers in the range of 0 to 23. If you want the time window to match the
+calendar day, set both values to zero.<br><br>
+The `timeWindowEndHour`must be greater than the `timeWindowStartHour` or `0` if you want to end
+the time window exactly at 0:00.
 
 ### blockMode (default `true`)
 
 This sets the basic operating mode of the script. Two modes are supported:
 
-If `blockMode` is set to `true`, the script will switch on power for the block of `switchOnDuration`
+If `blockMode` is set to `true`, the script switches on power for the block of `switchOnDuration`
 consecutive hours with the lowest average price within the defined time window.
 
-If `blockMode` is set to `false`, the script will switch on power for the cheapest `switchDuration`
+If `blockMode` is set to `false`, the script switches on power for the cheapest `switchOnDuration`
 hours within the time window, even if these hours do not form a contiguous block.
 
 ### priceLimit (default `Infinity`)
 
-This variable defines a price limit which is expressed in cent per kWh. Power will not be switched
+This variable defines a price limit which is expressed in cent per kWh. Power is not switched
 on for hours with prices that are higher than this limit.
 
 The price limit can have decimals - e.g. a value of 10.5 cent is perfectly fine. The default value
 of `Infinity` means that there is no price limit.
+
+### useFallback (default `true`)
+
+The script requests the prices for the next day from the API every day shortly after 15:00. If the
+price retrieval fails (either because the prices for the next day are not yet available or
+due to connection or server issues), the script automatically retries the request in intervals
+of 20 minutes until it has completed successfully.
+
+If all retrieval attempts fail until approximately 15 minutes before midnight, the script stops
+the retrieval process and the `useFallback` setting determines what happens next:
+
+If `useFallback` is `true`, the script uses statistical prices to calculate the active hours for
+the next day. These prices are the average hourly prices of the Austrian and German market for the
+year 2024.
+
+If `useFallback` is `false`, no calculation takes place for the day in question.
 
 ### `priceModifier`
 
@@ -138,7 +164,7 @@ function priceModifier(spotPrice) {
 
 The formula can be as complex as you need it to be - just make sure that the expression after the
 `return` statement always returns a number. The resulting value will be rounded to two decimal
-positions when it is displayed on the HTML endpoint.
+positions when it is displayed on the Web UI.
 
 Note: Even if you do not use this feature, do NOT remove this function - the script will not work
 if it is missing!
@@ -165,22 +191,21 @@ Both variables MUST be filled when telegramActive is true - otherwise, the featu
 
 #### deviceName (default `Shelly`)
 
-The value of this variable will be included in the Telegram message in order to identify the sender.
-Especially useful when you run the script on several Shellies and want to know which one send which
+The value of this variable is included in the Telegram message in order to identify the sender.
+Especially useful when you run the script on several Shellies and want to know which one sent which
 message.
 
 #### sendSchedule (default `true`)
 
-If true, the script will send a Telegram message whenever a calculation run has finished
-successfully.
+If true, the script sends a Telegram message whenever a calculation run has finished successfully.
 
 #### sendPowerOn (default `true`)
 
-If true, the script will send a Telegram message when power output is switched on by the script.
+If true, the script sends a Telegram message when power output is switched on by the script.
 
 #### sendPowerOff (default `true`)
 
-If true, the script will send a Telegram message when power output is switched off by the script.
+If true, the script sends a Telegram message when power output is switched off by the script.
 
 ## FAQ
 
@@ -196,12 +221,12 @@ If there are no specific upgrade instructions in the CHANGELOG, use the followin
 
 ### I want to modify the script and/or the HTML endpoint. How do I do that?
 
-In order to reduce RAM usage on the Shelly, the script uses a process that compresses the HTML of
-the endpoint view and merges this compressed version into the script source code. If you want to
-change the script or the HTML view, you need use this process as well.
+In order to reduce RAM usage on the Shelly, the script uses a build script that compresses the HTML
+of the Web UI and merges this compressed version into the script source code. If you want to
+change the script or the Web UI, you need use this process as well.
 
-First, make sure that you have `Node.js` installed on your machine (any recent version will do).
-Then, clone the repository:
+First, make sure that you have `Node.js` installed (any recent version will do). Then, clone the
+repository:
 
 ```
 git clone https://github.com/towiat/spotelly
@@ -217,7 +242,7 @@ Now, you can make your changes by repeating the following steps as often as you 
 
 1. Modify `./src/spotelly.js` and/or `./src/endpoint.html` as needed
 2. Run `npm run build` to execute the HTML compression and merge
-3. Install the merged source file `./dist/final.js` on your Shelly´
+3. Install the merged source file `./dist/final.js` on your Shelly
 
 See the source code in the build script `build.js` for a detailed description of the compression
 and merge process.
