@@ -21,7 +21,6 @@
       const i = ts => new Date(ts).toLocaleString("sv", { dateStyle: "short", timeStyle: "medium" });
 
       const m = d => {
-        console.log("m called!")
         u("h", `<tr><th colspan=4>Power Output Timetable for Switch ${d.s}<tr><th>Date<th>Hour<th>ct/kWh<th>On`);
 
         if (!d.t.length) {
