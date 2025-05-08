@@ -192,6 +192,13 @@ function prcP(res, errc, errm, day) {
     }
   }
 
+  if (fbm) {
+    // in fallback mode, set all prices for the day to NaN
+    for (let i = getIndex(day.strt), j = day.strt; j < day.end; i++, j += 3600000) {
+      hrs[i] = [NaN, hrs[i][1]];
+    }
+  }
+
   setT(getH(Date.now(), 15) + rOff, getH(day.strt, 0));
 
   log("Timetable has been updated.", sendSchedule);

@@ -37,7 +37,7 @@ let hrs = [];
 let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
-let html = atob("H4sIAAAAAAACA4UUh5bjJvBXCGlSjCT7+tlCl9779X4YRiuyCPRg3J6f/z0ga9OLCzC9T/2WchIPA5AOe9PU6SRKoCjWocAOeuBK+Mum7gEFsSLCWw27wXkk0lkEi5zutMKOK9hqCcUIMG01amGKIIUBvqBNbbS9JJ2HlneIQ1hWlVS2/CUoMHrrSwtY2aGv1s5hQC+GD2+W18vrldIBKxnC74Sy17aMGOLB8IAHA6EDwKZGjQaa+4NDMOZQV2e4Xjt1INKIEDhVRWtgT9JRSGc2vSUIeywkWARPY5hC2yvmkevCu12xID0W10m/Lm5GHhRrA1dMZ2A8i7XzCjyoCYze6iFCu0Js0JF+P95JQQdCEa14F9/JvfReN3U1ysU7edHUrXMI/srQ+qIYvO6FP5BW70FFa4iup0m2beogozFsDCDZ8J22yu1K46RA7WyZ0l56GIyQkNEwZYgymipNcyZ5hgxy3ignNz1YLC8APzOQnh8fvlIZ5qW2FvyXD777lgPTHHljYUc+FQiJiO5blyp9P4ZsL6KJLWXHqDwiYn2WNHTOI2Wo+ytMD0pvenrKWc+BN0eZ0Y6yNzX6lB8inQmDsPxG86PbgSc/bHDYIHkQFZwz3jpP7u80yo68c4QynCbJJrmU7i/dxqdbYnX5uEuvH+ybfJUS5Picmfi3nNKVbjMosTRgL7DLj4mOHEqx2gpPBAus44neiyGLQePz+cucKf6dwC7i9llZll3O/ITQ9oxYRfey51H6pWtJFM+P4b33MjPjgrnZLB919/zN2L2cxmCdX5IumOyd4+La/INsUWSi8HmVqXjmJ0YW8/m7jNycv5uv6JuVnfEpUypG35+ad446lSEYLSGbs8U8P/0zbbFgi1u/E6fmGmcArIq8okT3eeqv7NrI1tRKbye2GFRfhDHpTa1tLMgfCbIDeVmc0Wmj8BGxdvtoKdyjIwSKLik9EWc/ie5ccooxYozxYadDObHkNI5AtNq8YTjj12/BzdMJTABiOZ2i/r0/Jg+G4mbzvSNjP69iL60pszmLjzY21X0wIBHUMnriTiR1RmDkoy14cQEJmbl7pnLLef7H4MnUOWvffB/zQx4OUXtkfzPTGZQ2lmUlwsFK0m6sTGNGTJYfW4jZyTZRUwd27Ji445zN8t8xfYZR+Nxo09xdibFjD9g5taQ//nD/AWVpOSy/vv/D92UYJ0u3h+yIYYnM2SWc8tP/2imlSJojeM7Kf2aQzjCFNa0PZ40Tipu6mpbLr6KkKqAtBgAA"); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA4UUh5bjJvBXCGlSjGT7+tlCm95zvXcM4xVZBHowbs9P/x6QtenJucD0PlQfKCfx0AFpsDV1lU6iBIpiFQpsoAWuhL+oqxZQECsivtWw65xHIp1FsMjpTitsuIKtllAMCNNWoxamCFIY4HNaV0bbC9J4WPMGsQuL6VQqW/4aFBi99aUFnNquna6cw4BedJ9fL6+WV6dKB5zKEP5glK22ZaQQD4YHPBgIDQDWFWo0UD/sHIIxh2p6wquVUwcijQiBU1WsDexJOgrpzKa1BGGPhQSL4GlMU2h7KTxInXu3K+akxeIqaVfF9SiDYmXgUuiEDGexcl6BBzWiMVrdRWxXiA060u6HOxloQCiiFW8inMJL8KqOESe9eKco6mrtHIK/dLQ6LzqvW+EPZK33oKI3RNfSpLuuqyCjM6wNINnwnbbK7UrjpEDtbJnKXnrojJCQ0TBWiDKaOk1zJnmGDHJeKyc3LVgszwG/MZDALw8/qAzzUlsL/vtHv/zMgWmOvLawI18LhMRE97NLnX6IXtvz6GJL2VFF5sPUnwUNjfNIGer2ktKC0puW9jlrOfD6KDPaUPauQp/qQ6QzoROWX6vvuR14cneD3QbJo2jgVPG18+ThTqNsyEdHKEM/atYppHR/7zY+3RKnF0+bBN217/JlKpDhM+biX3BKl3qdQYmlAXuOTX5MfORQiuVWeGJZYA1P/FZ0WUp6YwznHF/OXp/dEXcWCciZ4r8IbKLMPivLssmZHwnangjLGG72Mlp77dYkmsuPoyH7ySeZ5dFSzkIE3YRbZiaTfPDe8nfDfHMay+H8gjTBZB8ddYjymcrP6IyR2ceMzGezj+lifmX2WTYvMlv4fJqpeOYTemIycj1K9PmSvluKCR+rrGLl2r6OBlMLg9ESshmbz/L+33nzOZvf+IM5DuawP2BVlLUlum/TbGZXBrG6Uno7isUCtEUYGlZX2sZm/pkhG5AXxYmcXiM+EFZuHz2FMzpgoOiC0p44+1UM54JTjLXAnhFsdChHkZzG9Yle63cMJ/zqDbje92ACEMHpmPUfszVG0BXX6zuODLuwjHO4okzkLALrOJAPwYBEUIsYielJmqrAyBdb8OIcEjEzZ25qFrP8z8mTcepWvr4T60Med9F6FH830RmUNs/7pQgHK8l6Y2VaUWKy/LiGWJ1sEy01YNO0YXwfnc3yPyhthlH5NKTjzl6qsWML2Di1oPfuPnxEWXpYFj8+vHunDMNW6vUhO2JYIHN2AX3ev9dPKUWyHNFTVf63gnSCKa3x6XHWOKG4qabjw/QbcaHw7mkGAAA="); // placeholder for compressed html - used by build script
 
 function next() {
   let delay = Timer.getInfo(timH).next - Shelly.getUptimeMs();
@@ -189,6 +189,13 @@ function prcP(res, errc, errm, day) {
       updS(ele[0], true);
     } else {
       if (ele[1] <= priceLimit) updS(ele[0], true);
+    }
+  }
+
+  if (fbm) {
+    // in fallback mode, set all prices for the day to NaN
+    for (let i = getIndex(day.strt), j = day.strt; j < day.end; i++, j += 3600000) {
+      hrs[i] = [NaN, hrs[i][1]];
     }
   }
 
