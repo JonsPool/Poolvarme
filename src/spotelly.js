@@ -55,7 +55,7 @@ function updS(ts, on) {
 }
 
 function log(msg, sendTelegram) {
-  print(msg);
+  console.log(msg);
   if (telegramActive && sendTelegram) {
     Shelly.call("http.post", {
       url: "https://api.telegram.org/bot" + telegramToken + "/sendMessage",
@@ -124,7 +124,7 @@ function prcP(res, errc, errm, day) {
     if (day.strt > Date.now() + 1800000) {
       // retry only if day starts at least 30 minutes in the future
       timH = Timer.set(1200000, false, getP, day);
-      print(err, "Trying again at", next().toString());
+      console.log(err, "Trying again at", next().toString());
       return;
     }
     if (!useFallback) {
@@ -230,7 +230,7 @@ function dtEP(req, res) {
     try {
       updS(data.ts, data.on);
     } catch (error) {
-      print(error.message);
+      console.log(error.message);
     }
   }
   res.headers = [["Content-Type", "application/json"]];
@@ -246,7 +246,7 @@ function dtEP(req, res) {
 
 function init() {
   if (Shelly.getComponentStatus("sys").unixtime === null) {
-    print("Time not synchronized, waiting one second...");
+    console.log("Time not synchronized, waiting one second...");
     Timer.set(1000, false, init);
     return;
   }

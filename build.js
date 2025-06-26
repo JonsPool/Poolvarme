@@ -12,9 +12,9 @@ This script must be run after each modification of either spotelly.js or endpoin
 be executed with 'npm run build'.
 */
 
+import { minify } from "html-minifier";
 import Zopfli from "node-zopfli-es";
 import fs from "node:fs";
-import { minify } from "html-minifier";
 
 const main = (htmlfile, sourceJS, targetJS) => {
   const html = fs.readFileSync(htmlfile, "utf8");
