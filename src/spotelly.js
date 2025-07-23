@@ -44,14 +44,14 @@ function next() {
   return timH !== undefined ? Math.floor(Date.now()) + delay : 0;
 }
 
-function getIndex(ts) {
+function getI(ts) {
   let idx = (ts - anch) / 3600000;
-  if (idx < 0 || idx > hrs.length - 1) throw new Error("No index for " + ts + "; anch: " + anch);
+  if (idx < 0 || idx >= hrs.length) throw new Error("No index for " + ts + "; anch: " + anch);
   return idx;
 }
 
 function updS(ts, on) {
-  hrs[getIndex(ts)][1] = on;
+  hrs[getI(ts)][1] = on;
 }
 
 function log(msg, sendTelegram) {
@@ -89,10 +89,7 @@ function getH(ts, hour) {
 }
 
 function setT(time, strt) {
-  timH = Timer.set(time === 0 ? 0 : time - Date.now(), false, getP, {
-    strt: strt,
-    end: getH(strt, 0),
-  });
+  timH = Timer.set(time || time - Date.now(), false, getP, { strt: strt, end: getH(strt, 0) });
 }
 
 function getP(day) {
@@ -151,9 +148,9 @@ function prcP(res, errc, errm, day) {
   let dur = Math.min(switchOnDuration, winH);
 
   let data = [];
-  let idx = getIndex(winS);
+  let idx = getI(winS);
   hrs.slice(idx, idx + winH).forEach(function (ele) {
-    data.push([winS, ele[0], ele[1]]);
+    data.push([winS, ele[0]]);
     winS += 3600000;
   });
 
@@ -194,7 +191,7 @@ function prcP(res, errc, errm, day) {
 
   if (fbm) {
     // in fallback mode, set all prices for the day to NaN
-    for (let i = getIndex(day.strt), j = day.strt; j < day.end; i++, j += 3600000) {
+    for (let i = getI(day.strt), j = day.strt; j < day.end; i++, j += 3600000) {
       hrs[i] = [NaN, hrs[i][1]];
     }
   }
