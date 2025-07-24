@@ -90,21 +90,21 @@ function getH(ts, hour) {
 }
 
 function setT(time, strt) {
-  timH = Timer.set(time || time - Date.now(), false, getP, { strt: strt, end: getH(strt, 0) });
+  timH = Timer.set(time || time - Date.now(), false, getP, strt);
 }
 
-function getP(day) {
-  let qry = "&start=" + day.strt / 1000 + "&end=" + (day.end / 1000 - 3600);
+function getP(strt) {
+  let qry = "&start=" + strt / 1000 + "&end=" + 9999999999;
 
   Shelly.call(
     "http.get",
     { url: "https://api.energy-charts.info/price?bzn=" + epexBZN + qry },
     prcP,
-    day,
+    strt,
   );
 }
 
-function prcP(res, errc, errm, day) {
+function prcP(res, errc, errm, strt) {
   let fbm = false;
 
   let err = "";
@@ -122,32 +122,31 @@ function prcP(res, errc, errm, day) {
   }
 
   if (err) {
-    if (day.strt > Date.now() + 1800000) {
+    if (strt > Date.now() + 1800000) {
       // retry only if day starts at least 30 minutes in the future
-      timH = Timer.set(1200000, false, getP, day);
+      timH = Timer.set(1200000, false, getP, strt);
       console.log(err, "Trying again at", next().toString());
       return;
     }
     if (!useFallback) {
       // no fallback; set timer for the next day
-      setT(getH(Date.now(), 15) + rOff, getH(day.strt, 0));
+      setT(getH(Date.now(), 15) + rOff, getH(strt, 0));
       return;
     }
     // no prices retrieved and useFallback is true - do the fallback
     fbm = true;
-    let fbp = [
+    for (let p of [
       7.56, 6.98, 6.73, 6.53, 6.63, 7.33, 8.97, 10.16, 9.74, 8.21, 6.87, 6.0, 5.35, 5.02, 5.28,
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
-    ];
-    for (let h = day.strt, i = 0; h < day.end; h += 3600000, i++) {
-      prc.push([fbp[i % 24], false]);
+    ]) {
+      prc.push(p);
       on.push(false);
     }
   }
 
-  if (anch === 0) anch = day.strt;
+  if (anch === 0) anch = strt;
 
-  let winS = timeWindowStartHour === 0 ? day.strt : getH(day.strt, timeWindowStartHour);
+  let winS = timeWindowStartHour === 0 ? strt : getH(strt, timeWindowStartHour);
   let winE = getH(winS, timeWindowEndHour);
   let winH = (winE - winS) / 3600000;
   let dur = Math.min(switchOnDuration, winH);
@@ -194,12 +193,10 @@ function prcP(res, errc, errm, day) {
     }
   }
 
-  if (fbm) {
-    // in fallback mode, set all prices for the day to NaN
-    for (let i = getI(day.strt), j = day.strt; j < day.end; i++, j += 3600000) prc[i] = NaN;
-  }
+  // in fallback mode, set all prices to NaN:
+  if (fbm) for (let i = getI(strt); i < prc.length; i++) prc[i] = NaN;
 
-  setT(getH(Date.now(), 15) + rOff, getH(day.strt, 0));
+  setT(getH(Date.now(), 15) + rOff, getH(strt, 0));
 
   log("Timetable has been updated.", sendSchedule);
 }
