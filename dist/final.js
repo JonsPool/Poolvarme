@@ -33,11 +33,12 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
-let hrs = [];
+let prc = [];
+let on = [];
 let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
-let html = atob("H4sIAAAAAAACA4UUh5bjJvBXCGlSjGT7+tlCm95zvXcM4xVZBHowbs9P/x6QtenJucD0PlQfKCfx0AFpsDV1lU6iBIpiFQpsoAWuhL+oqxZQECsivtWw65xHIp1FsMjpTitsuIKtllAMCNNWoxamCFIY4HNaV0bbC9J4WPMGsQuL6VQqW/4aFBi99aUFnNquna6cw4BedJ9fL6+WV6dKB5zKEP5glK22ZaQQD4YHPBgIDQDWFWo0UD/sHIIxh2p6wquVUwcijQiBU1WsDexJOgrpzKa1BGGPhQSL4GlMU2h7KTxInXu3K+akxeIqaVfF9SiDYmXgUuiEDGexcl6BBzWiMVrdRWxXiA060u6HOxloQCiiFW8inMJL8KqOESe9eKco6mrtHIK/dLQ6LzqvW+EPZK33oKI3RNfSpLuuqyCjM6wNINnwnbbK7UrjpEDtbJnKXnrojJCQ0TBWiDKaOk1zJnmGDHJeKyc3LVgszwG/MZDALw8/qAzzUlsL/vtHv/zMgWmOvLawI18LhMRE97NLnX6IXtvz6GJL2VFF5sPUnwUNjfNIGer2ktKC0puW9jlrOfD6KDPaUPauQp/qQ6QzoROWX6vvuR14cneD3QbJo2jgVPG18+ThTqNsyEdHKEM/atYppHR/7zY+3RKnF0+bBN217/JlKpDhM+biX3BKl3qdQYmlAXuOTX5MfORQiuVWeGJZYA1P/FZ0WUp6YwznHF/OXp/dEXcWCciZ4r8IbKLMPivLssmZHwnangjLGG72Mlp77dYkmsuPoyH7ySeZ5dFSzkIE3YRbZiaTfPDe8nfDfHMay+H8gjTBZB8ddYjymcrP6IyR2ceMzGezj+lifmX2WTYvMlv4fJqpeOYTemIycj1K9PmSvluKCR+rrGLl2r6OBlMLg9ESshmbz/L+33nzOZvf+IM5DuawP2BVlLUlum/TbGZXBrG6Uno7isUCtEUYGlZX2sZm/pkhG5AXxYmcXiM+EFZuHz2FMzpgoOiC0p44+1UM54JTjLXAnhFsdChHkZzG9Yle63cMJ/zqDbje92ACEMHpmPUfszVG0BXX6zuODLuwjHO4okzkLALrOJAPwYBEUIsYielJmqrAyBdb8OIcEjEzZ25qFrP8z8mTcepWvr4T60Med9F6FH830RmUNs/7pQgHK8l6Y2VaUWKy/LiGWJ1sEy01YNO0YXwfnc3yPyhthlH5NKTjzl6qsWML2Di1oPfuPnxEWXpYFj8+vHunDMNW6vUhO2JYIHN2AX3ev9dPKUWyHNFTVf63gnSCKa3x6XHWOKG4qabjw/QbcaHw7mkGAAA="); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA31Uh7bjJhD9FUKaFCPJ3r6ykNN7tveOxfiJPAQ6YtyO1/+ewSU9caHcGaZeqD7QvsFtD6zFztZVHJlWqLJ5yLCFDqRWw2VddYCKOUX7lYF17wdkjXcIDiVfG42t1LAyDWSHjTDOoFE2C42yICe8rqxxl6wdYCFbxD6URdFol/8aNFizGnIHWLi+K+beY8BB9Z9fz6/mVwttAhZNCH8I8s64nBA2gJUBtxZCC4B1hQYt1A97j2DttiqO+2ru9ZY1VoUguc4WFjYsDlnj7bJzDGGDWQMOYeCUpjLurHzQuhj8OpuwDrOrrJtn10kH1dzCWem4OYzZ3A8aBtCnLUVretqtM7VEz7rNYY4GWlCaGS1bWh/Co/W8rorDOZpjFHW18J6COjuaX2T9YDo1bNnCbECTN0Tf8Xh2UVehIWdYW0C2lGvjtF/n1jcKjXd5LHs+QG9VAwkPpwpxwWOneSoamaCAVNZEhmUHDvMLwG8sxOWX2x90gmlunIPh+0e//CxBGImydrBmXyuEKET/s4+dfkgpuwtyseJiR8YJoP6UPLR+QC7QdGekA22WHd+nopNW1rsm4S0X7yocYn0YNSf0yslr9T2/piLcXWK/RPaIDBwrvvADe7g22LTso53Nw/50so4hxfl7vxzi3GBx+bSNq7vuXTqNBdJyLAL9neR8ahaJzVW6iwIvaSmUJKSnJVFN9QmlirPZHXUnFb8obAnbJHmekzhNRSuPmHFnbBrPUXTfqKZNTmXdrdTAgCz6l/A6Vhs++SQJI4lCj0apMIGsJyqd8bFg448Fm4zHH/NycmX8WTLJEszatEgUjemIH4WCXSeN2Lh3hxsgORXMDyVrg00+2jX7dMrfTd1IngqqWQTrj3Ym8WkerCEejMVknO7/XTaZiMmNP4QnDh6uCjhNupij/zbSMLlyUKsrbVYnNUq+y8KhN3VlHPXtz4KmheYyO8Lx4ZEHYO435Alm/LADzUvO98y7ryicS8mRkvJ7wbA1IT+ppJxuCnmt3wk/kldvwPV9uicazblw79/zU+J/MOkURJ9dr+94dmZ+whdEu4dgoUHQJQWh9yxyJwj2xQoGdQERTPQsFLocp3/Om524NR/qO1Qa9rgnq6T+bmSIQS5N9wLlmQILQCLEUuBs1wG2Xpf83t2Hj7iID0D548O7d/JwuD1msU12bYnCl0AZlb+rf/fNI76nAFpwB1LS4+ldkv6BdAnSrlHkKG6PtfjfQvARUpTT03vhnfVKS6yK02vyG3KhQOgeBgAA"); // placeholder for compressed html - used by build script
 
 function next() {
   let delay = Timer.getInfo(timH).next - Shelly.getUptimeMs();
@@ -46,12 +47,12 @@ function next() {
 
 function getI(ts) {
   let idx = (ts - anch) / 3600000;
-  if (idx < 0 || idx >= hrs.length) throw new Error("No index for " + ts + "; anch: " + anch);
+  if (idx < 0 || idx >= prc.length) throw new Error("No index for " + ts + "; anch: " + anch);
   return idx;
 }
 
-function updS(ts, on) {
-  hrs[getI(ts)][1] = on;
+function updS(ts, val) {
+  on[getI(ts)] = val;
 }
 
 function log(msg, sendTelegram) {
@@ -114,7 +115,10 @@ function prcP(res, errc, errm, day) {
   } else {
     let body = JSON.parse(res.body);
     res.body = null; // free up RAM
-    for (let price of body.price) hrs.push([priceModifier(price / 10), false]);
+    for (let price of body.price) {
+      prc.push(priceModifier(price / 10));
+      on.push(false);
+    }
   }
 
   if (err) {
@@ -136,7 +140,8 @@ function prcP(res, errc, errm, day) {
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
     ];
     for (let h = day.strt, i = 0; h < day.end; h += 3600000, i++) {
-      hrs.push([fbp[i % 24], false]);
+      prc.push([fbp[i % 24], false]);
+      on.push(false);
     }
   }
 
@@ -149,8 +154,8 @@ function prcP(res, errc, errm, day) {
 
   let data = [];
   let idx = getI(winS);
-  hrs.slice(idx, idx + winH).forEach(function (ele) {
-    data.push([winS, ele[0]]);
+  prc.slice(idx, idx + winH).forEach(function (ele) {
+    data.push([winS, ele]);
     winS += 3600000;
   });
 
@@ -191,9 +196,7 @@ function prcP(res, errc, errm, day) {
 
   if (fbm) {
     // in fallback mode, set all prices for the day to NaN
-    for (let i = getI(day.strt), j = day.strt; j < day.end; i++, j += 3600000) {
-      hrs[i] = [NaN, hrs[i][1]];
-    }
+    for (let i = getI(day.strt), j = day.strt; j < day.end; i++, j += 3600000) prc[i] = NaN;
   }
 
   setT(getH(Date.now(), 15) + rOff, getH(day.strt, 0));
@@ -206,9 +209,9 @@ function hrly() {
   let now = Date.now();
   let hour = now - (now % 3600000);
   if (hour === anch) {
-    let ele = hrs.splice(0, 1)[0];
-    set(ele[1]);
-    anch = hrs.length === 0 ? 0 : anch + 3600000;
+    prc.splice(0, 1)[0];
+    set(on.splice(0, 1)[0]);
+    anch = prc.length === 0 ? 0 : anch + 3600000;
   }
 }
 
@@ -225,7 +228,7 @@ function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
     try {
-      updS(data.ts, data.on);
+      updS(data.h, data.o);
     } catch (error) {
       console.log(error.message);
     }
@@ -235,7 +238,8 @@ function dtEP(req, res) {
     a: anch,
     n: next(),
     s: switchID,
-    t: hrs,
+    p: prc,
+    o: on,
   });
   res.code = 200;
   res.send();

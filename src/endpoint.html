@@ -26,47 +26,40 @@
         let sum = 0;
         let body = "";
 
-        if (!d.t.length) {
-          body = "<tr><td colspan=4 class=p-5>No data";
-        } else {
+        if (d.a) {
           let h = d.a;
-          const prices = d.t.map(x => (x[0] === null ? NaN : x[0]));
-          const max = Math.max(...prices);
-          const min = Math.min(...prices);
+          d.p = d.p.map(x => x ?? NaN);
+          const max = Math.max(...d.p);
+          const min = Math.min(...d.p);
 
-          for (let [p, o] of d.t) {
-            if (p === null) p = NaN;
+          d.p.forEach((p, idx) => {
+            const o = d.o[idx];
+
             if (o) {
               sum += p;
               count++;
             }
+
             const color = isNaN(max) ? "0, 0%, 100%" : `${(1 - (p - min) / (max - min)) * 120}, 100%, 50%`;
             const s = `style="color: hsl(${color});"`;
             body += `<tr><td ${s}>${i(h).slice(0, 10)}<td ${s}>${i(h).slice(11, 16)}<td ${s} class=text-end>${p.toFixed(2)}<td><div class=form-switch><input class=form-check-input type=checkbox ${o ? "checked" : ""} onClick="t(${h}, this.checked)"></div>`;
             h += 3600000;
-          }
+          });
         }
 
-        c("b", body);
+        c("b", body || "<tr><td colspan=4 class=p-5>No data");
 
         c("f", `Selected: ${count} Hours, Average: ${(count ? sum / count : 0).toFixed(2)} ct/kWh<br>Next Update: ${i(d.n)}`);
       };
 
-      async function l() {
-        fetch(u)
-          .then(r => r.json())
-          .then(d => m(d));
-      }
-
-      // eslint-disable-next-line no-unused-vars
       const t = (h, o) => {
-        fetch(u, { method: "POST", body: JSON.stringify({ ts: h, on: o }) })
+        fetch(u, h ? { method: "POST", body: JSON.stringify({ h, o }) } : { method: "GET" })
           .then(r => r.json())
           .then(d => m(d))
           .catch(e => c("b", `<tr><td colspan=4 class=p-5>${e}`));
       };
 
-      window.onload = l;
+      window.onload = t;
     </script>
   </body>
 </html>

@@ -7,8 +7,8 @@ Start with 'npm run dev'.
 */
 
 import { readFile, watch } from "fs/promises";
-import { WebSocketServer } from "ws";
 import http from "http";
+import { WebSocketServer } from "ws";
 
 const hostname = "127.0.0.1";
 const port = 3000;
@@ -16,34 +16,38 @@ const wsPort = 3001;
 const htmlPath = "./src/endpoint.html";
 
 const data = {
-  a: 1746223200000,
-  n: 1746277264841,
+  a: 1753394400000,
+  n: 1754485546331,
   s: 0,
-  t: [
-    [9.995, false],
-    [9.568, false],
-    [9.406, false],
-    [9.171, false],
-    [8.892, false],
-    [8.891, false],
-    [8.792, false],
-    [8.281, false],
-    [6.143, false],
-    [1.353, false],
-    [0.001, false],
-    [-0.001, true],
-    [-0.116, true],
-    [-0.304, true],
-    [-0.269, true],
-    [-0.003, false],
-    [0, false],
-    [2.965, false],
-    [7.05, false],
-    [7.837, false],
-    [8.897, false],
-    [8.697, false],
-    [8.053, false],
-    [6.591, false],
+  p: [
+    10.493, 10.095, 9.338, 8.976, 9.608, 9.002, 10.696, 10.996, 10.99, 9.76, 9.383, 8.307, 8.121,
+    7.767, 7.605, 7.982, 8.109, 9.64, 6, 10.196, 10.694, 10.992, 10.5, 10.606, 10.093,
+  ],
+  o: [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
   ],
 };
 
@@ -107,8 +111,8 @@ const server = http.createServer((req, res) => {
     });
     req.on("end", () => {
       const upd = JSON.parse(body);
-      const idx = (upd.ts - data.a) / 3600000;
-      data.t[idx][1] = upd.on;
+      const idx = (upd.h - data.a) / 3600000;
+      data.o[idx] = upd.o;
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(data));

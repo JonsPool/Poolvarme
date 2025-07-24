@@ -33,7 +33,8 @@ let sendPowerOff = true; // send telegram when power has been switched off by th
 
 // <<<<< END OF CONFIGURATION - no changes needed below this line >>>>>
 
-let hrs = [];
+let prc = [];
+let on = [];
 let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
@@ -46,12 +47,12 @@ function next() {
 
 function getI(ts) {
   let idx = (ts - anch) / 3600000;
-  if (idx < 0 || idx >= hrs.length) throw new Error("No index for " + ts + "; anch: " + anch);
+  if (idx < 0 || idx >= prc.length) throw new Error("No index for " + ts + "; anch: " + anch);
   return idx;
 }
 
-function updS(ts, on) {
-  hrs[getI(ts)][1] = on;
+function updS(ts, val) {
+  on[getI(ts)] = val;
 }
 
 function log(msg, sendTelegram) {
@@ -114,7 +115,10 @@ function prcP(res, errc, errm, day) {
   } else {
     let body = JSON.parse(res.body);
     res.body = null; // free up RAM
-    for (let price of body.price) hrs.push([priceModifier(price / 10), false]);
+    for (let price of body.price) {
+      prc.push(priceModifier(price / 10));
+      on.push(false);
+    }
   }
 
   if (err) {
@@ -136,7 +140,8 @@ function prcP(res, errc, errm, day) {
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
     ];
     for (let h = day.strt, i = 0; h < day.end; h += 3600000, i++) {
-      hrs.push([fbp[i % 24], false]);
+      prc.push([fbp[i % 24], false]);
+      on.push(false);
     }
   }
 
@@ -149,8 +154,8 @@ function prcP(res, errc, errm, day) {
 
   let data = [];
   let idx = getI(winS);
-  hrs.slice(idx, idx + winH).forEach(function (ele) {
-    data.push([winS, ele[0]]);
+  prc.slice(idx, idx + winH).forEach(function (ele) {
+    data.push([winS, ele]);
     winS += 3600000;
   });
 
@@ -191,9 +196,7 @@ function prcP(res, errc, errm, day) {
 
   if (fbm) {
     // in fallback mode, set all prices for the day to NaN
-    for (let i = getI(day.strt), j = day.strt; j < day.end; i++, j += 3600000) {
-      hrs[i] = [NaN, hrs[i][1]];
-    }
+    for (let i = getI(day.strt), j = day.strt; j < day.end; i++, j += 3600000) prc[i] = NaN;
   }
 
   setT(getH(Date.now(), 15) + rOff, getH(day.strt, 0));
@@ -206,9 +209,9 @@ function hrly() {
   let now = Date.now();
   let hour = now - (now % 3600000);
   if (hour === anch) {
-    let ele = hrs.splice(0, 1)[0];
-    set(ele[1]);
-    anch = hrs.length === 0 ? 0 : anch + 3600000;
+    prc.splice(0, 1)[0];
+    set(on.splice(0, 1)[0]);
+    anch = prc.length === 0 ? 0 : anch + 3600000;
   }
 }
 
@@ -225,7 +228,7 @@ function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
     try {
-      updS(data.ts, data.on);
+      updS(data.h, data.o);
     } catch (error) {
       console.log(error.message);
     }
@@ -235,7 +238,8 @@ function dtEP(req, res) {
     a: anch,
     n: next(),
     s: switchID,
-    t: hrs,
+    p: prc,
+    o: on,
   });
   res.code = 200;
   res.send();
