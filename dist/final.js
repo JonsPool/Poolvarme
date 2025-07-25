@@ -90,7 +90,7 @@ function getH(ts, hour) {
 }
 
 function setT(time, strt) {
-  timH = Timer.set(time || time - Date.now(), false, getP, strt);
+  timH = Timer.set(time === 0 ? 0 : time - Date.now(), false, getP, strt);
 }
 
 function getP(strt) {
