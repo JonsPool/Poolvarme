@@ -89,11 +89,8 @@ function getH(ts, hour) {
   ).getTime();
 }
 
-function setT(time, strt) {
-  timH = Timer.set(time === 0 ? 0 : time - Date.now(), false, getP, strt);
-}
-
-function getP(strt) {
+function getP() {
+  let strt = getH(Date.now(), 0);
   let qry = "&start=" + strt / 1000 + "&end=" + 9999999999;
 
   Shelly.call(
@@ -124,13 +121,13 @@ function prcP(res, errc, errm, strt) {
   if (err) {
     if (strt > Date.now() + 1800000) {
       // retry only if day starts at least 30 minutes in the future
-      timH = Timer.set(1200000, false, getP, strt);
+      timH = Timer.set(1200000, false, getP);
       console.log(err, "Trying again at", next().toString());
       return;
     }
     if (!useFallback) {
       // no fallback; set timer for the next day
-      setT(getH(Date.now(), 15) + rOff, getH(strt, 0));
+      timH = Timer.set(getH(Date.now(), 15) + rOff - Date.now(), false, getP);
       return;
     }
     // no prices retrieved and useFallback is true - do the fallback
@@ -196,7 +193,7 @@ function prcP(res, errc, errm, strt) {
   // in fallback mode, set all prices to NaN:
   if (fbm) for (let i = getI(strt); i < prc.length; i++) prc[i] = NaN;
 
-  setT(getH(Date.now(), 15) + rOff, getH(strt, 0));
+  timH = Timer.set(getH(Date.now(), 15) + rOff - Date.now(), false, getP);
 
   log("Timetable has been updated.", sendSchedule);
 }
@@ -250,7 +247,8 @@ function init() {
   }
 
   let now = Date.now();
-  setT(new Date(now).getHours() < 15 ? getH(now, 15) + rOff : 0, getH(now, 0));
+  let time = new Date(now).getHours() < 15 ? getH(now, 15) + rOff : 0;
+  timH = Timer.set(time && time - Date.now(), false, getP);
 
   HTTPServer.registerEndpoint("spotelly", spEP);
   HTTPServer.registerEndpoint("data", dtEP);
