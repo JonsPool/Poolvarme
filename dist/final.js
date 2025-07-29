@@ -51,10 +51,6 @@ function getI(ts) {
   return idx;
 }
 
-function updS(ts, val) {
-  on[getI(ts)] = val;
-}
-
 function log(msg, sendTelegram) {
   console.log(msg);
   if (telegramActive && sendTelegram) {
@@ -103,6 +99,7 @@ function getP() {
 
 function prcP(res, errc, errm, strt) {
   let fbm = false;
+  let dsix = prc.length;
 
   let err = "";
   if (errc !== 0) {
@@ -122,7 +119,7 @@ function prcP(res, errc, errm, strt) {
     if (strt > Date.now() + 1800000) {
       // retry only if day starts at least 30 minutes in the future
       timH = Timer.set(1200000, false, getP);
-      console.log(err, "Trying again at", next().toString());
+      console.log(err, "Trying again at", next());
       return;
     }
     if (!useFallback) {
@@ -143,17 +140,12 @@ function prcP(res, errc, errm, strt) {
 
   if (anch === 0) anch = strt;
 
-  let winS = timeWindowStartHour === 0 ? strt : getH(strt, timeWindowStartHour);
-  let winE = getH(winS, timeWindowEndHour);
-  let winH = (winE - winS) / 3600000;
-  let dur = Math.min(switchOnDuration, winH);
+  let weix = timeWindowEndHour === 0 ? prc.length : prc.length - (24 - timeWindowEndHour);
 
   let data = [];
-  let idx = getI(winS);
-  prc.slice(idx, idx + winH).forEach(function (ele) {
-    data.push([winS, ele]);
-    winS += 3600000;
-  });
+  for (let i = dsix + timeWindowStartHour; i < weix; i++) data.push([i, prc[i]]);
+
+  let dur = Math.min(switchOnDuration, data.length);
 
   let sidx = 0;
   if (blockMode) {
@@ -182,13 +174,7 @@ function prcP(res, errc, errm, strt) {
     sidx = -dur;
   }
 
-  for (let ele of data.splice(sidx, dur)) {
-    if (fbm) {
-      updS(ele[0], true);
-    } else {
-      if (ele[1] <= priceLimit) updS(ele[0], true);
-    }
-  }
+  for (let ele of data.splice(sidx, dur)) if (fbm || ele[1] <= priceLimit) on[ele[0]] = true;
 
   // in fallback mode, set all prices to NaN:
   if (fbm) for (let i = getI(strt); i < prc.length; i++) prc[i] = NaN;
@@ -222,7 +208,7 @@ function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
     try {
-      updS(data.h, data.o);
+      on[getI(data.h)] = data.o;
     } catch (error) {
       console.log(error.message);
     }
