@@ -38,17 +38,12 @@ let on = [];
 let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
-let html = atob("H4sIAAAAAAACA31Uh7bjJhD9FUKaFCPJ3r6ykNN7tveOxfiJPAQ6YtyO1/+ewSU9caHcGaZeqD7QvsFtD6zFztZVHJlWqLJ5yLCFDqRWw2VddYCKOUX7lYF17wdkjXcIDiVfG42t1LAyDWSHjTDOoFE2C42yICe8rqxxl6wdYCFbxD6URdFol/8aNFizGnIHWLi+K+beY8BB9Z9fz6/mVwttAhZNCH8I8s64nBA2gJUBtxZCC4B1hQYt1A97j2DttiqO+2ru9ZY1VoUguc4WFjYsDlnj7bJzDGGDWQMOYeCUpjLurHzQuhj8OpuwDrOrrJtn10kH1dzCWem4OYzZ3A8aBtCnLUVretqtM7VEz7rNYY4GWlCaGS1bWh/Co/W8rorDOZpjFHW18J6COjuaX2T9YDo1bNnCbECTN0Tf8Xh2UVehIWdYW0C2lGvjtF/n1jcKjXd5LHs+QG9VAwkPpwpxwWOneSoamaCAVNZEhmUHDvMLwG8sxOWX2x90gmlunIPh+0e//CxBGImydrBmXyuEKET/s4+dfkgpuwtyseJiR8YJoP6UPLR+QC7QdGekA22WHd+nopNW1rsm4S0X7yocYn0YNSf0yslr9T2/piLcXWK/RPaIDBwrvvADe7g22LTso53Nw/50so4hxfl7vxzi3GBx+bSNq7vuXTqNBdJyLAL9neR8ahaJzVW6iwIvaSmUJKSnJVFN9QmlirPZHXUnFb8obAnbJHmekzhNRSuPmHFnbBrPUXTfqKZNTmXdrdTAgCz6l/A6Vhs++SQJI4lCj0apMIGsJyqd8bFg448Fm4zHH/NycmX8WTLJEszatEgUjemIH4WCXSeN2Lh3hxsgORXMDyVrg00+2jX7dMrfTd1IngqqWQTrj3Ym8WkerCEejMVknO7/XTaZiMmNP4QnDh6uCjhNupij/zbSMLlyUKsrbVYnNUq+y8KhN3VlHPXtz4KmheYyO8Lx4ZEHYO435Alm/LADzUvO98y7ryicS8mRkvJ7wbA1IT+ppJxuCnmt3wk/kldvwPV9uicazblw79/zU+J/MOkURJ9dr+94dmZ+whdEu4dgoUHQJQWh9yxyJwj2xQoGdQERTPQsFLocp3/Om524NR/qO1Qa9rgnq6T+bmSIQS5N9wLlmQILQCLEUuBs1wG2Xpf83t2Hj7iID0D548O7d/JwuD1msU12bYnCl0AZlb+rf/fNI76nAFpwB1LS4+ldkv6BdAnSrlHkKG6PtfjfQvARUpTT03vhnfVKS6yK02vyG3KhQOgeBgAA"); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA31U55brJhB+FUKaiJFs37I/bKFN77m9dyzGK7IIdMS4HV+/ewbZTk9cgOntg/IDE2rcdcAabF1VppUZjTpfxBwbaEEZ3V9XZQuomddEry1sutAjq4NH8Kj4xhpslIG1rSEfCGm9RatdHmvtQE15VTrrr1nTw1I1iF2cjce18cWv0YCz677wgGPfteNFCBix193nt4ubxc2xsRHHdYx/CIrW+oI4rAenIu4cxAYAqxItOqgedgHBuV05PtLlIpgdq52OUXGTLx1sWVryOrhV6xnCFvMaPELPqUxt/Vl50Lrqwyafshbzm6xd5LdJB/XCwVnpSAxrvgi9gR7MiaRsbUfUJtcrDKzdDnty0IA2zBrV0HlIj86LqhwPdrSnLKpyGQIldQ60uMq73ra637Gl3YKhaIih5cl2WZWxpmBYOUC2UhvrTdgULtQabfBFanvRQ+d0DRmPpw5xydOkuZC1ylCCUBWBYdWCx+IK8BsH6fjl7geToSis99B//+iXnxVIq1BVHjbsa42QhBh+DmnSD6lkf0Uh1lzuyTkxaD4zHpvQI5do2zOnBWNXLT8I2apGVfs64w2X70rsU38YDSd22qtb1b2woSbcXWG3QvaIHBw7vgw9e7ixWDfso31TxMPJskoppf37sOrTXuP4+mmTTnf9OzFPDYpqIg39veJ8bpdZU2ixT4Ja0VEGRZyOjgQ13WVUKl5e3tF3hPxFY0O8bVYUBYmFkE4dedafefNkR9l9o+smO7V1v9Y9A/IYXsJrqVUGn3ySmZFCGUcjIW0k71kQl3wi2eRjyaaTycd8Nr0x+Syb5hnmToyzQKsY8aNQstukIcjVu+EGKE4NC/2MNdFlH+31Qcz5u7kfqVNDDUvM6qO9zWpRRGcJBxM5nYjDv8umUzm9+EN4wuBwVcAb0sUCw7cJhtmNQa0qjV2f1Kj4No/DbKrSeprbnwV1A/V1fmSnh0cNjEXYUiS45AMFhs84P7Dgv6J0rhVHKqo+SIaNjcVJRXC6KRS1eifrkbp5AbcP4kAwWnDp37/np8L/QNIpiS6/Xd0J7Ij8eRoMqjOUJdKMyPhMZ8NF+Hbl3HPQfSbkQP8SPDZnYlATo2x6u1QDI+EuZgSN6W2R6ARZUmiKfk7JLQnjD8FBjWBmVHE8sMFAsi/W0OsrSMwsXppxnE3En5vMTkBe9NUdmgN73FEJpP5uZDMU4kC5n9G2BCTsrSRe7lvAJpgZv3f34SMu01sz+/Hh3TtFHC6qXe6yfTNDGWZAzZv9rv7dN4/4gcI34Af80zsdfCb+4LQZElXrFIjIY9v/t+d8lLKcn56m4F3QRmE5Pj1cvwH03qKHiQYAAA=="); // placeholder for compressed html - used by build script
 
 function next() {
-  let delay = Timer.getInfo(timH).next - Shelly.getUptimeMs();
-  return timH !== undefined ? Math.floor(Date.now()) + delay : 0;
-}
-
-function getI(ts) {
-  let idx = (ts - anch) / 3600000;
-  if (idx < 0 || idx >= prc.length) throw new Error("No index for " + ts + "; anch: " + anch);
-  return idx;
+  let info = Timer.getInfo(timH);
+  if (info === undefined) return 0;
+  return Math.floor(Date.now()) + info.next - Shelly.getUptimeMs();
 }
 
 function log(msg, sendTelegram) {
@@ -75,18 +70,9 @@ function set(val) {
   });
 }
 
-function getH(ts, hour) {
-  let d = new Date(ts);
-  return new Date(
-    d.getFullYear(),
-    d.getMonth(),
-    d.getDate() + Number(hour <= d.getHours()),
-    hour,
-  ).getTime();
-}
-
 function getP() {
-  let strt = getH(Date.now(), 0);
+  let now = new Date();
+  let strt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
   let qry = "&start=" + strt / 1000 + "&end=" + 9999999999;
 
   Shelly.call(
@@ -107,10 +93,11 @@ function prcP(res, errc, errm, strt) {
   } else if (res.code !== 200) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
+    res.headers = null; // free up RAM to reduce peak memory usage
     let body = JSON.parse(res.body);
     res.body = null; // free up RAM
-    for (let price of body.price) {
-      prc.push(priceModifier(price / 10));
+    for (let p of body.price) {
+      prc.push(priceModifier(p / 10));
       on.push(false);
     }
   }
@@ -122,11 +109,9 @@ function prcP(res, errc, errm, strt) {
       console.log(err, "Trying again at", next());
       return;
     }
-    if (!useFallback) {
-      // no fallback; set timer for the next day
-      timH = Timer.set(getH(Date.now(), 15) + rOff - Date.now(), false, getP);
-      return;
-    }
+
+    if (!useFallback) return;
+
     // no prices retrieved and useFallback is true - do the fallback
     fbm = true;
     for (let p of [
@@ -177,9 +162,7 @@ function prcP(res, errc, errm, strt) {
   for (let ele of data.splice(sidx, dur)) if (fbm || ele[1] <= priceLimit) on[ele[0]] = true;
 
   // in fallback mode, set all prices to NaN:
-  if (fbm) for (let i = getI(strt); i < prc.length; i++) prc[i] = NaN;
-
-  timH = Timer.set(getH(Date.now(), 15) + rOff - Date.now(), false, getP);
+  if (fbm) for (let i = dsix; i < prc.length; i++) prc[i] = NaN;
 
   log("Timetable has been updated.", sendSchedule);
 }
@@ -193,6 +176,8 @@ function hrly() {
     set(on.splice(0, 1)[0]);
     anch = prc.length === 0 ? 0 : anch + 3600000;
   }
+
+  if (new Date().getHours === 15) timH = Timer.set(rOff, false, getP);
 }
 
 function spEP(req, res) {
@@ -207,20 +192,11 @@ function spEP(req, res) {
 function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
-    try {
-      on[getI(data.h)] = data.o;
-    } catch (error) {
-      console.log(error.message);
-    }
+    let idx = (data.h - anch) / 3600000;
+    if (idx >= 0 || idx < prc.length) on[idx] = data.o;
   }
   res.headers = [["Content-Type", "application/json"]];
-  res.body = JSON.stringify({
-    a: anch,
-    n: next(),
-    s: switchID,
-    p: prc,
-    o: on,
-  });
+  res.body = JSON.stringify({ a: anch, n: next(), s: switchID, p: prc, o: on, r: rOff });
   res.code = 200;
   res.send();
 }
@@ -232,9 +208,7 @@ function init() {
     return;
   }
 
-  let now = Date.now();
-  let time = new Date(now).getHours() < 15 ? getH(now, 15) + rOff : 0;
-  timH = Timer.set(time && time - Date.now(), false, getP);
+  if (new Date().getHours() >= 15) timH = Timer.set(0, false, getP);
 
   HTTPServer.registerEndpoint("spotelly", spEP);
   HTTPServer.registerEndpoint("data", dtEP);

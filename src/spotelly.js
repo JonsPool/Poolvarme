@@ -41,14 +41,9 @@ let timH = undefined;
 let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
 
 function next() {
-  let delay = Timer.getInfo(timH).next - Shelly.getUptimeMs();
-  return timH !== undefined ? Math.floor(Date.now()) + delay : 0;
-}
-
-function getI(ts) {
-  let idx = (ts - anch) / 3600000;
-  if (idx < 0 || idx >= prc.length) throw new Error("No index for " + ts + "; anch: " + anch);
-  return idx;
+  let info = Timer.getInfo(timH);
+  if (info === undefined) return 0;
+  return Math.floor(Date.now()) + info.next - Shelly.getUptimeMs();
 }
 
 function log(msg, sendTelegram) {
@@ -75,18 +70,9 @@ function set(val) {
   });
 }
 
-function getH(ts, hour) {
-  let d = new Date(ts);
-  return new Date(
-    d.getFullYear(),
-    d.getMonth(),
-    d.getDate() + Number(hour <= d.getHours()),
-    hour,
-  ).getTime();
-}
-
 function getP() {
-  let strt = getH(Date.now(), 0);
+  let now = new Date();
+  let strt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
   let qry = "&start=" + strt / 1000 + "&end=" + 9999999999;
 
   Shelly.call(
@@ -107,10 +93,11 @@ function prcP(res, errc, errm, strt) {
   } else if (res.code !== 200) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
+    res.headers = null; // free up RAM to reduce peak memory usage
     let body = JSON.parse(res.body);
     res.body = null; // free up RAM
-    for (let price of body.price) {
-      prc.push(priceModifier(price / 10));
+    for (let p of body.price) {
+      prc.push(priceModifier(p / 10));
       on.push(false);
     }
   }
@@ -122,11 +109,9 @@ function prcP(res, errc, errm, strt) {
       console.log(err, "Trying again at", next());
       return;
     }
-    if (!useFallback) {
-      // no fallback; set timer for the next day
-      timH = Timer.set(getH(Date.now(), 15) + rOff - Date.now(), false, getP);
-      return;
-    }
+
+    if (!useFallback) return;
+
     // no prices retrieved and useFallback is true - do the fallback
     fbm = true;
     for (let p of [
@@ -177,9 +162,7 @@ function prcP(res, errc, errm, strt) {
   for (let ele of data.splice(sidx, dur)) if (fbm || ele[1] <= priceLimit) on[ele[0]] = true;
 
   // in fallback mode, set all prices to NaN:
-  if (fbm) for (let i = getI(strt); i < prc.length; i++) prc[i] = NaN;
-
-  timH = Timer.set(getH(Date.now(), 15) + rOff - Date.now(), false, getP);
+  if (fbm) for (let i = dsix; i < prc.length; i++) prc[i] = NaN;
 
   log("Timetable has been updated.", sendSchedule);
 }
@@ -193,6 +176,8 @@ function hrly() {
     set(on.splice(0, 1)[0]);
     anch = prc.length === 0 ? 0 : anch + 3600000;
   }
+
+  if (new Date().getHours === 15) timH = Timer.set(rOff, false, getP);
 }
 
 function spEP(req, res) {
@@ -207,20 +192,11 @@ function spEP(req, res) {
 function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
-    try {
-      on[getI(data.h)] = data.o;
-    } catch (error) {
-      console.log(error.message);
-    }
+    let idx = (data.h - anch) / 3600000;
+    if (idx >= 0 || idx < prc.length) on[idx] = data.o;
   }
   res.headers = [["Content-Type", "application/json"]];
-  res.body = JSON.stringify({
-    a: anch,
-    n: next(),
-    s: switchID,
-    p: prc,
-    o: on,
-  });
+  res.body = JSON.stringify({ a: anch, n: next(), s: switchID, p: prc, o: on, r: rOff });
   res.code = 200;
   res.send();
 }
@@ -232,9 +208,7 @@ function init() {
     return;
   }
 
-  let now = Date.now();
-  let time = new Date(now).getHours() < 15 ? getH(now, 15) + rOff : 0;
-  timH = Timer.set(time && time - Date.now(), false, getP);
+  if (new Date().getHours() >= 15) timH = Timer.set(0, false, getP);
 
   HTTPServer.registerEndpoint("spotelly", spEP);
   HTTPServer.registerEndpoint("data", dtEP);
