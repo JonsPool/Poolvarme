@@ -220,7 +220,7 @@ function init() {
     for (let job of res.jobs) {
       let cll = job.calls[0];
       if (cll.method.toLowerCase() !== "script.eval" || cll.params.id !== Script.id) continue;
-      if (job.timespec === schd.tspc && cll.params.code === call.params.code) return;
+      if (job.timespec === schd.timespec && cll.params.code === call.params.code) return;
       schd.id = job.id;
       break;
     }
