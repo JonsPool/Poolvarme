@@ -28,6 +28,7 @@ export default [
         atob: "readonly",
         console: "readonly",
         HTTPServer: "readonly",
+        Script: "readonly",
         Shelly: "readonly",
         Timer: "readonly",
       },

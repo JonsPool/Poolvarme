@@ -214,37 +214,18 @@ function init() {
   HTTPServer.registerEndpoint("data", dtEP);
 
   Shelly.call("Schedule.List", {}, function (res) {
-    let sid = Shelly.getCurrentScriptId();
-    let mthd = "Schedule.Update";
-    let schd = null;
-    let tspc = "0 0 * * * *";
-    let code = "hrly()";
+    let call = { method: "Script.Eval", params: { id: Script.id, code: "hrly()" } };
+    let schd = { enable: true, timespec: "0 0 * * * *", calls: [call] };
 
     for (let job of res.jobs) {
-      let call = job.calls[0];
-      if (!(call.method.toLowerCase() === "script.eval" && call.params.id === sid)) {
-        continue; // this is not our schedule - skip
-      }
-      if (job.timespec === tspc && call.params.code === code) {
-        return; // this IS our schedule and it matches the configuration - we are done
-      }
-      schd = job;
-      schd.timespec = tspc;
-      call.params.code = code;
+      let cll = job.calls[0];
+      if (cll.method.toLowerCase() !== "script.eval" || cll.params.id !== Script.id) continue;
+      if (job.timespec === schd.tspc && cll.params.code === call.params.code) return;
+      schd.id = job.id;
       break;
     }
 
-    if (schd === null) {
-      // schedule does not exist - create it
-      mthd = "Schedule.Create";
-      schd = {
-        enable: true,
-        timespec: tspc,
-        calls: [{ method: "Script.Eval", params: { id: sid, code: code } }],
-      };
-    }
-
-    Shelly.call(mthd, schd);
+    Shelly.call("id" in schd ? "Schedule.Update" : "Schedule.Create", schd);
   });
 }
 
