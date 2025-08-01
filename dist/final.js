@@ -177,7 +177,7 @@ function hrly() {
     anch = prc.length === 0 ? 0 : anch + 3600000;
   }
 
-  if (new Date().getHours === 15) timH = Timer.set(rOff, false, getP);
+  if (new Date().getHours() === 15) timH = Timer.set(rOff, false, getP);
 }
 
 function spEP(req, res) {
