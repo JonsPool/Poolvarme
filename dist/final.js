@@ -193,7 +193,7 @@ function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
     let idx = (data.h - anch) / 3600000;
-    if (idx >= 0 || idx < prc.length) on[idx] = data.o;
+    if (idx >= 0 && idx < prc.length) on[idx] = data.o;
   }
   res.headers = [["Content-Type", "application/json"]];
   res.body = JSON.stringify({ a: anch, n: next(), s: switchID, p: prc, o: on, r: rOff });
