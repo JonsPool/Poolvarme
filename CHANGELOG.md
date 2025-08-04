@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.1 (2025-08-04)
+
+This is a minor release with no functional changes. The changelog has two items:
+
+- **Fixed: Daylight Saving Time (DST) Handling**<br>
+  Due to limitations of the Shelly time calculation routines, the script would have run out of sync
+  with the calendar on the days when the clock is changed to/from DST. This is fixed with this
+  version.
+
+- **Changed: Optimizations**<br>
+  Due to an improved memory model and general code optimizations, the scipt now uses less memory.
+  Peak memory usage has been reduced from ~9.5 kB to ~7.2 kB in the most memory-demanding setup.
+
 ## 3.0 (2025-05-09)
 
 Another major update with significant changes and improvements. Make sure to read the documentation

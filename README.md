@@ -65,7 +65,7 @@ least 1.5.0. Then, follow these steps:
 1. Activate the `Run on startup` switch to make sure that the script restarts after a
    reboot of the device.
 
-## First start
+## First Start
 
 Once you have started the script, you can always look at the Web UI to see the current status. The
 Web UI can be opened in the browser with the URL `http://<ipAddress>/script/<scriptNumber>/spotelly`
@@ -223,7 +223,7 @@ If there are no specific upgrade instructions in the CHANGELOG, use the followin
 
 In order to reduce RAM usage on the Shelly, the script uses a build script that compresses the HTML
 of the Web UI and merges this compressed version into the script source code. If you want to
-change the script or the Web UI, you need use this process as well.
+change the script or the Web UI, you need to use this process as well.
 
 First, make sure that you have `Node.js` installed (any recent version will do). Then, clone the
 repository:
