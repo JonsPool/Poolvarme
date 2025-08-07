@@ -94,12 +94,7 @@ function prcP(res, errc, errm, strt) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
     res.headers = null; // free up RAM to reduce peak memory usage
-    let body = JSON.parse(res.body);
-    res.body = null; // free up RAM
-    for (let p of body.price) {
-      prc.push(priceModifier(p / 10));
-      on.push(false);
-    }
+    for (let p of JSON.parse(res.body).price) prc.push(priceModifier(p / 10));
   }
 
   if (err) {
@@ -117,52 +112,47 @@ function prcP(res, errc, errm, strt) {
     for (let p of [
       7.56, 6.98, 6.73, 6.53, 6.63, 7.33, 8.97, 10.16, 9.74, 8.21, 6.87, 6.0, 5.35, 5.02, 5.28,
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
-    ]) {
+    ])
       prc.push(p);
-      on.push(false);
-    }
   }
 
   if (anch === 0) anch = strt;
+  while (on.length < prc.length) on.push(false);
 
+  let wsix = dsix + timeWindowStartHour;
   let weix = timeWindowEndHour === 0 ? prc.length : prc.length - (24 - timeWindowEndHour);
+  let dur = Math.min(switchOnDuration, prc.length - dsix);
 
-  let data = [];
-  for (let i = dsix + timeWindowStartHour; i < weix; i++) data.push([i, prc[i]]);
-
-  let dur = Math.min(switchOnDuration, data.length);
-
-  let sidx = 0;
   if (blockMode) {
+    let sidx = 0;
     let lSum = Infinity;
-    for (let i = 0, j = dur; j <= data.length; i++, j++) {
+    for (let i = wsix, j = wsix + dur; j < weix; i++, j++) {
       let sSum = 0;
-      data.slice(i, j).forEach(function (ele) {
-        sSum += ele[1];
-      });
+      for (let h = i; h < j; h++) sSum += prc[h];
       if (sSum < lSum) {
         sidx = i;
         lSum = sSum;
       }
     }
+    for (let i = sidx; i < sidx + dur; i++) on[i] = true;
   } else {
-    // move the <duration> elements with the lowest price to the end of the data array
     for (let i = 0; i < dur; i++) {
-      for (let j = 1; j < data.length; j++) {
-        if (data[j][1] > data[j - 1][1]) {
-          let temp = data[j];
-          data[j] = data[j - 1];
-          data[j - 1] = temp;
+      let midx;
+      let mprc = Infinity;
+      for (let j = wsix; j < weix; j++) {
+        if (prc[j] < mprc && !on[j]) {
+          midx = j;
+          mprc = prc[j];
         }
       }
+      on[midx] = true;
     }
-    sidx = -dur;
   }
 
-  for (let ele of data.splice(sidx, dur)) if (fbm || ele[1] <= priceLimit) on[ele[0]] = true;
-
-  // in fallback mode, set all prices to NaN:
-  if (fbm) for (let i = dsix; i < prc.length; i++) prc[i] = NaN;
+  for (let i = dsix; i < prc.length; i++) {
+    if (fbm) prc[i] = NaN;
+    if (!fbm && prc[i] >= priceLimit) on[i] = false;
+  }
 
   log("Timetable has been updated.", sendSchedule);
 }
