@@ -95,6 +95,7 @@ function prcP(res, errc, errm, strt) {
   } else {
     res.headers = null; // free up RAM to reduce peak memory usage
     for (let p of JSON.parse(res.body).price) prc.push(priceModifier(p / 10));
+    res.body = null;
   }
 
   if (err) {
@@ -117,7 +118,7 @@ function prcP(res, errc, errm, strt) {
   }
 
   if (anch === 0) anch = strt;
-  while (on.length < prc.length) on.push(false);
+  on.length = prc.length;
 
   let wsix = dsix + timeWindowStartHour;
   let weix = timeWindowEndHour === 0 ? prc.length : prc.length - (24 - timeWindowEndHour);
@@ -151,7 +152,7 @@ function prcP(res, errc, errm, strt) {
 
   for (let i = dsix; i < prc.length; i++) {
     if (fbm) prc[i] = NaN;
-    if (!fbm && prc[i] >= priceLimit) on[i] = false;
+    if (!fbm && prc[i] >= priceLimit) delete on[i];
   }
 
   log("Timetable has been updated.", sendSchedule);
@@ -183,7 +184,7 @@ function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
     let idx = (data.h - anch) / 3600000;
-    if (idx >= 0 && idx < prc.length) on[idx] = data.o;
+    if (idx >= 0 && idx < prc.length) data.o ? (on[idx] = true) : delete on[idx];
   }
   res.headers = [["Content-Type", "application/json"]];
   res.body = JSON.stringify({ a: anch, n: next(), s: switchID, p: prc, o: on, r: rOff });

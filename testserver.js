@@ -16,42 +16,33 @@ const wsPort = 3001;
 const htmlPath = "./src/endpoint.html";
 
 const data = {
-  a: 1753912800000,
+  a: 1754690400000,
   n: 0,
   s: 0,
   p: [
-    8.818, 7.808, 7.772, 7.422, 7.806, 7.926, 9.525, 10.023, 9.383, 8.271, 7.25, 7.324, 6.34, 5.05,
-    3.588, 5.831, 7.605, 8.979, 9.49, 11, 12.997, 12.051, 11.045, 10.195,
+    10.186, 10.031, 9.978, 9.65, 9.613, 9.631, 9.597, 8.883, 6.506, 1.534, -0.002, -0.1, -1.238,
+    -1.717, -1.46, -0.342, -0.005, 2.56, 8.391, 10.796, 12.464, 11.743, 10.704, 9.417,
   ],
   o: [
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
     true,
     true,
     true,
     true,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
-    false,
   ],
-  r: 22663,
+  r: 53730,
 };
-
 let endpointHTML = "";
 
 const loadEndpointHTML = async () => {
