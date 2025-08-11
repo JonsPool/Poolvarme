@@ -164,7 +164,7 @@ function hrly() {
   let hour = now - (now % 3600000);
   if (hour === anch) {
     prc.splice(0, 1)[0];
-    set(on.splice(0, 1)[0]);
+    set(Boolean(on.splice(0, 1)[0]));
     anch = prc.length === 0 ? 0 : anch + 3600000;
   }
 
