@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.2 (2025-09-02)
+
+This is an important release and updating to it as soon as possible is strongly recommended for the
+following reason:
+
+**AS OF OCTOBER 1, 2025 ALL PREVIOUS VERSIONS OF THE SCRIPT WILL NO LONGER WORK.**
+
+On October 1, day-ahead trading on the European energy exchanges will switch from
+60-minute-intervals to 15-minute-intervals. The resulting increase in the number of prices per day
+will cause earlier script versions to produce nonsensical results after September 30.
+
+This script version will use hourly prices up to September 30 and 15-minute prices from October 1
+onwards.
+
+However, note that 15-minute prices are not fully supported yet. Instead, the script uses these
+prices to calculate an average price per hour and this average is then used to calculate the switch
+times. Aside from the (internal) average calculation, the script behaves exactly as before.
+
+I intend to add support for 15-minute prices at a later time, but at this point there are several
+unknowns both from a technical and a conceptual perspective which will hopefully become clearer
+after the switch has actually happened.
+
 ## 3.1 (2025-08-04)
 
 This is a minor release with no functional changes. The changelog has two items:

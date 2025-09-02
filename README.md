@@ -1,6 +1,15 @@
 # Spot-Price Based Control of Shelly Devices
 
+**NOTE: IF YOU ARE USING VERSION 3.1 OR EARLIER, UPGRADE TO VERSION 3.2 AS SOON AS POSSIBLE. SEE
+THE CHANGELOG FOR DETAILS.**
+
 ## Introduction
+
+**Note:
+On October 1, 2025, energy trading on the European energy exchanges will switch from
+60-minute-intervals to 15-minute intervals. For the time being, this script determines the hourly
+prices by calculating the average price for each hour from the 15-minute prices. Full support for
+15-minute prices will likely follow at a later time.**
 
 This script uses EPEX spot hourly energy prices to control the power output of a Shelly device. It
 runs directly on the Shelly and the only technical requirement is that the Shelly has access to the
