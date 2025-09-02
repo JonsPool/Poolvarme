@@ -1,4 +1,4 @@
-// Spotelly Version 3.1
+// Spotelly Version 3.2
 // This script uses EPEX spot hourly energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
 // This script uses price data from http://energy-charts.info
@@ -94,8 +94,19 @@ function prcP(res, errc, errm, strt) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
     res.headers = null; // free up RAM to reduce peak memory usage
-    for (let p of JSON.parse(res.body).price) prc.push(priceModifier(p / 10));
+    let prcs = JSON.parse(res.body).price;
     res.body = null;
+    let day = new Date(strt);
+    if (day.getFullYear() === 2025 && day.getMonth() < 9) {
+      for (let p of prcs) prc.push(priceModifier(p / 10));
+    } else {
+      // 15-minute prices are live; use average hourly price for now
+      for (let i = 0; i < prcs.length; i += 4) {
+        let psum = 0;
+        for (let j = i; j < i + 4; j++) psum += prcs[j] / 10;
+        prc.push(priceModifier(parseFloat((psum / 4).toFixed(3))));
+      }
+    }
   }
 
   if (err) {
