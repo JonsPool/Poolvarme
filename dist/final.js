@@ -93,19 +93,13 @@ function prcP(res, errc, errm, strt) {
   } else if (res.code !== 200) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
-    res.headers = null; // free up RAM to reduce peak memory usage
+    delete res.headers; // free up RAM to reduce peak memory usage
     let prcs = JSON.parse(res.body).price;
-    res.body = null;
-    let day = new Date(strt);
-    if (day.getFullYear() === 2025 && day.getMonth() < 9) {
-      for (let p of prcs) prc.push(priceModifier(p / 10));
-    } else {
-      // 15-minute prices are live; use average hourly price for now
-      for (let i = 0; i < prcs.length; i += 4) {
-        let psum = 0;
-        for (let j = i; j < i + 4; j++) psum += prcs[j] / 10;
-        prc.push(priceModifier(parseFloat((psum / 4).toFixed(3))));
-      }
+    delete res.body;
+    for (let i = 0; i < prcs.length; i += 4) {
+      let psum = 0;
+      for (let j = i; j < i + 4; j++) psum += prcs[j] / 10;
+      prc.push(priceModifier(parseFloat((psum / 4).toFixed(3))));
     }
   }
 
