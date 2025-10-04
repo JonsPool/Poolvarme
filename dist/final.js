@@ -1,4 +1,4 @@
-// Spotelly Version 3.2
+// Spotelly Version 3.3
 // This script uses EPEX spot hourly energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
 // This script uses price data from http://energy-charts.info
@@ -7,10 +7,12 @@
 
 let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
-let switchOnDuration = 4; // minimum 1, maximum 24
+let hourMode = true; // true for hourly, false for quarter-hourly calculation
+let blockMode = true; // set calculation mode
+
+let switchOnDuration = 4; // hours if hourMode is true, else quarter hours
 let timeWindowStartHour = 7; // minimum 0, maximum 23
 let timeWindowEndHour = 19; // minimum 0, maximum 23
-let blockMode = true; // set calculation mode
 let priceLimit = Infinity; // in cent/kWh
 let useFallback = true; // if true, use fallback when price retrieval fails
 
@@ -38,7 +40,8 @@ let on = [];
 let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
-let html = atob("H4sIAAAAAAACA31Uh7rjphJ+FS63iRjJ9m622UInvWd771iMj8hBoE+M2+f1u2eQ7fTEBZjefij/ZUKNuw5Yg62ryrQyo1Hni5hjAy0oo/urqmwBNfOa6LWFTRd6ZHXwCB4V31iDjTKwtjXkAyGtt2i1y2OtHagpr0pn/RVreliqBrGLs/G4Nr74KRpwdt0XHnDsu3a8CAEj9rr75EZxvbg9NjbiuI7xV0HRWl8Qh/XgVMSdg9gAYFWiRQfVoy4gOLcrx0e6XASzY7XTMSpu8qWDLUtLXge3aj1D2GJeg0foOZWprT8rD1qXfdjkU9Zifp21i/wG6aBeODgrHYlhzRehN9CDOZGUre2I2uR6hYG122FPDhrQhlmjGjoP6dF5UZXjwY72lEVVLkOgpM6BFpd519tW9zu2tFswFA0xtDzZLqsy1hQMKwfIVmpjvQmbwoVaow2+SG0veuicriHj8dQhLnmaNBeyVhlKEKoiMKxa8FhcAn7pIB0/231rMhSF9R76bx7/+IMCaRWqysOGfaERkhDDDyFN+hGV7C8pxJrLPTknBs1nxmMTeuQSbXvmtGDsquUHIVvVqGpfZ7zh8n2JfeoPo+HETnv1cXU/bKgJ91bYrZA9JgfHji9Dzx5tLNYN+8++KeLhZFmllNL+TVj1aa9xfPWsSad7/r2YpwZFNZGG/l5xPrfLrCm02CdBregogyJOR0eCmu4yKhUvLu7qu0L+qLEh3jYrioLEQkinjjzrz7x5sqPsvtR1k53aul/rngF5DK/gjdQqg//9LzMjhTKORkLaSN6zIC74RLLJfyWbTib/5bPptclH2TTPMHdinAVaxYgfhZLdIA1Brt4PN0BxaljoZ6yJLvvPXh/EnL+f+5E6NdSwxKz+s7dZLYroLOFgIqcTcfhr2XQqpzd/FZ4wOFwV8IZ0scDwVYJhdm1Qq0pj1yc1Kr7N4zCbqrSe5vZbQd1AfZUf2enhUQNjEbYUCS74QIHhM84PLPjPKZ0rxZGKqg+SYWNjcVIRnG4KRa3ey3qkrt+EGwdxIBgtuPQfPvBT4b8i6ZREl9+o7gZ2RP48DQbVGcoSaUZkfKaz4SJ8tXLuBeg+E3KgfwwemzMxqIlRNr1RqoGRcBczgsb0hkh0giwpNEU/p+SWhPFH4KBGMDOqOB7YYCDZp2vo9SUkZhYvzDjOJuK3TWYnIC/66i7NgT3pqARSfz+yGQpxoNzPaFsCEvZWEi/2LWATzIzfv/foMZfprZl99+je3SIOF9Uud9m+maEMM6DmzX5R//rLx/xA4RvwA/7pnQ4+E79y2gyJqnUKROSx7f/Ycz5KWc5PT1PwLmijsByfHq6fAYKWZYmJBgAA"); // placeholder for compressed html - used by build script
+let html = atob("H4sIAAAAAAACA31Uh7rjphJ+FS7bpGsk29vXFjrpPdt7x2J8RA4CfWLcPq/fPYMspycuwPTh54fif9pXuGuB1djYsogj0wpVtggZ1tCA1Kq7KIsGUDGnSF4b2LS+Q1Z5h+BQ8o3RWEsNa1NB1gvCOING2SxUyoKc8rKwxl2wuoOlrBHbMBuPK+3yX4IGa9Zd7gDHrm3GC+8xYKfaz27lN/K7Y20CjqsQfjfkjXE5aVgHVgbcWQg1AJYFGrRQPmk9grW7YnyUi4XXO1ZZFYLkOlta2LI4ZJW3q8YxhC1mFTiEjtM2lXEn597rvPObbMoazG6wZpHdIh9UCwsnp6PQj9nCdxo60INI3ZqWpE2mVuhZs+3nmKAGpZnRsqZ13x6tFyV1HONojl2UxdJ7aupUaHGetZ1pVLdjS7MFTdUQfcNj7LIsQkXFsLSAbCU3xmm/ya2vFBrv8gh73kFrVQUJDwNCXPB40jwVlUxQQCpLIsOqAYf5OeDXFuLyi933OsE0N85B993Tn3+SIIxEWTrYsK8UQjSi/8nHk35CW3bnVGLNxZ6Sk4LOZ8ZD7TvkAk1z0jSgzarhh1Q0spblvkp4zcXHAruID3HLhlY5ebN86DcEwoMVtitkTynBEfGl79iTjcGqZpf3dR4OQ2QZW4rzd37VxbnC8cWLOq4euI/pPAIU5ERo+jvJ+dwskzpX6T4aKklL4SVpWloS1VSb0Fbx7Oy+up+KnxXWpNsmeZ6TOU2FlUedcSfdPMZRd1+rqk4GWPdr1TGgjP4NvBNKJnD1aqJHEkUYjVJhAmVPfHrGJ4JNrgg2nUyu8Nn0+uT/yTRLMLPpOPE0piN+NAp2izxSSvWxvwGSE2C+m7E62OTyXh3SOf84dyM5AKpZVJaX9yap0jxYQzyYiOkkPfyzbToV09u/GwcO9lcFnCZfzNF/E2mYXO/dykKb9eBGm2+y0J9NWRhH5/ZHQ1VDdZEd1fHhkb1i4bdUCc54L4HmM84PzLsvqZ0LyZE2VR0Ew9qEfHBJOd0Uqlp+FNWIsDWH9EAsWnDhPn3iw75/J9LQQ5vdKu97diT+PJ4LyhOTBVIaCj7JSX8PvllZ+wpUl6Sil3/2DuuT0Lulo2R6q5C9ItIuJMSM6a00ypGx5FDn3ZyaWxLFL+/DgQWwUCFowT5fQ6fOYUbbT8KZHofZJP0juGwg8KIr7xP+7FlLvZP7x5FJME0P1PSJZUtA4txK4Nm+Aay9nvGHD5485SK+MbMfnjy4n4f+gprlLtnXMxR+BoTa7Df3b79+yg9UvgbX857eZ++S9HdNkyBJlYqFSDzi/Z9g81Hscj48Sd5Zr7TEYjw8WL8CmR7u84EGAAA="); // placeholder for compressed html - used by build script
+let intv = hourMode ? 3_600_000 : 900_000;
 
 function next() {
   let info = Timer.getInfo(timH);
@@ -86,6 +89,7 @@ function getP() {
 function prcP(res, errc, errm, strt) {
   let fbm = false;
   let dsix = prc.length;
+  let mult = hourMode ? 1 : 4;
 
   let err = "";
   if (errc !== 0) {
@@ -96,10 +100,16 @@ function prcP(res, errc, errm, strt) {
     delete res.headers; // free up RAM to reduce peak memory usage
     let prcs = JSON.parse(res.body).price;
     delete res.body;
-    for (let i = 0; i < prcs.length; i += 4) {
-      let psum = 0;
-      for (let j = i; j < i + 4; j++) psum += prcs[j] / 10;
-      prc.push(priceModifier(parseFloat((psum / 4).toFixed(3))));
+    if (hourMode) {
+      for (let i = 0; i < prcs.length; i += 4) {
+        let psum = 0;
+        for (let j = i; j < i + 4; j++) psum += prcs[j] / 10;
+        prc.push(priceModifier(parseFloat((psum / 4).toFixed(3))));
+      }
+    } else {
+      for (let p of prcs) {
+        prc.push(priceModifier(p / 10));
+      }
     }
   }
 
@@ -119,14 +129,14 @@ function prcP(res, errc, errm, strt) {
       7.56, 6.98, 6.73, 6.53, 6.63, 7.33, 8.97, 10.16, 9.74, 8.21, 6.87, 6.0, 5.35, 5.02, 5.28,
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
     ])
-      prc.push(p);
+      for (let i = 0; i < mult; i++) prc.push(p); // if not in hourMode, push each price 4 times
   }
 
   if (anch === 0) anch = strt;
   on.length = prc.length;
 
-  let wsix = dsix + timeWindowStartHour;
-  let weix = timeWindowEndHour === 0 ? prc.length : prc.length - (24 - timeWindowEndHour);
+  let wsix = dsix + timeWindowStartHour * mult;
+  let weix = timeWindowEndHour === 0 ? prc.length : prc.length - (24 - timeWindowEndHour * mult);
   let dur = Math.min(switchOnDuration, prc.length - dsix);
 
   if (blockMode) {
@@ -164,13 +174,13 @@ function prcP(res, errc, errm, strt) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function hrly() {
+function chck() {
   let now = Date.now();
-  let hour = now - (now % 3600000);
+  let hour = now - (now % intv);
   if (hour === anch) {
     prc.splice(0, 1)[0];
     set(Boolean(on.splice(0, 1)[0]));
-    anch = prc.length === 0 ? 0 : anch + 3600000;
+    anch = prc.length === 0 ? 0 : anch + intv;
   }
 
   if (new Date().getHours() === 15) timH = Timer.set(rOff, false, getP);
@@ -188,11 +198,11 @@ function spEP(req, res) {
 function dtEP(req, res) {
   if (req.method === "POST") {
     let data = JSON.parse(req.body);
-    let idx = (data.h - anch) / 3600000;
+    let idx = (data.h - anch) / intv;
     if (idx >= 0 && idx < prc.length) data.o ? (on[idx] = true) : delete on[idx];
   }
   res.headers = [["Content-Type", "application/json"]];
-  res.body = JSON.stringify({ a: anch, n: next(), s: switchID, p: prc, o: on, r: rOff });
+  res.body = JSON.stringify({ i: intv, a: anch, n: next(), s: switchID, p: prc, o: on, r: rOff });
   res.code = 200;
   res.send();
 }
@@ -210,8 +220,12 @@ function init() {
   HTTPServer.registerEndpoint("data", dtEP);
 
   Shelly.call("Schedule.List", {}, function (res) {
-    let call = { method: "Script.Eval", params: { id: Script.id, code: "hrly()" } };
-    let schd = { enable: true, timespec: "0 0 * * * *", calls: [call] };
+    let call = { method: "Script.Eval", params: { id: Script.id, code: "chck()" } };
+    let schd = {
+      enable: true,
+      timespec: hourMode ? "0 0 * * * *" : "0 */15 * * * *",
+      calls: [call],
+    };
 
     for (let job of res.jobs) {
       let cll = job.calls[0];

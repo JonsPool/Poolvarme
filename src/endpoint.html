@@ -43,7 +43,7 @@
             const color = isNaN(max) ? "0, 0%, 100%" : `${(1 - (p - min) / (max - min)) * 120}, 100%, 50%`;
             const s = `style="color: hsl(${color});"`;
             body += `<tr><td ${s}>${i(h).slice(0, 10)}<td ${s}>${i(h).slice(11, 16)}<td ${s} class=text-end>${p.toFixed(2)}<td><div class=form-switch><input class=form-check-input type=checkbox ${o ? "checked" : ""} onClick="t(${h}, this.checked)"></div>`;
-            h += 3600000;
+            h += d.i;
           });
         }
 
@@ -52,7 +52,7 @@
         const w = new Date();
         const n = d.n ? d.n : new Date(w.getFullYear(), w.getMonth(), w.getDate() + (w.getHours() >= 15), 15).getTime() + d.r;
 
-        c("f", `Selected: ${count} Hours, Average: ${(count ? sum / count : 0).toFixed(2)} ct/kWh<br>Next Update: ${i(n)}`);
+        c("f", `${count} selected, Average: ${(count ? sum / count : 0).toFixed(2)} ct/kWh<br>Next Update: ${i(n)}`);
       };
 
       const t = (h, o) => {
