@@ -178,15 +178,15 @@ function prcP(res, errc, errm, strt) {
 
 // eslint-disable-next-line no-unused-vars
 function chck() {
-  let now = Date.now();
-  let hour = now - (now % intv);
-  if (hour === anch) {
+  let now = Math.floor(Date.now());
+  let time = new Date(now - (now % intv));
+  if (time.getTime() === anch) {
     prc.splice(0, 1)[0];
     set(Boolean(on.splice(0, 1)[0]));
     anch = prc.length === 0 ? 0 : anch + intv;
   }
 
-  if (new Date().getHours() === 15) timH = Timer.set(rOff, false, getP);
+  if (time.getHours() === 15 && time.getMinutes() === 0) timH = Timer.set(rOff, false, getP);
 }
 
 function spEP(req, res) {
