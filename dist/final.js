@@ -98,8 +98,9 @@ function prcP(res, errc, errm, strt) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
     delete res.headers; // free up RAM to reduce peak memory usage
-    res.body = res.body.substring(res.body.indexOf('"price":') + 8);
-    res.body = res.body.substring(0, res.body.indexOf("]") + 1);
+    let pstr = res.body.indexOf('"price":') + 8;
+    let pend = res.body.indexOf("]", pstr) + 1;
+    res.body = res.body.substring(pstr, pend);
     let prcs = JSON.parse(res.body);
     delete res.body;
     if (hourMode) {
