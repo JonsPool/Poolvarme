@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.3 (2025-10-06)
+
+This release adds full support for 15-minute prices. Since many contracts continue to work with
+hourly prices (which are just the average of the 15-minute prices for each hour), the script
+supports both a 60-minute and a 15-minute mode for the time being.
+
+The new configuration variable `hourMode` lets you choose between the two modes:
+
+When set to `true` (the default), the script calculates and displays switch times for full hours
+only (based on the average price for each hour).
+
+When set to `false`, switch times are calculated and displayed based on quarter hours. All script
+features like time windows, block mode and price limits work as expected and the WebUI timetable
+allows manual modifications of the results. There is, however, one difference with regards to the
+setup of the script:
+
+In 15-minute mode, the `switchOnDuration` variable defines the duration in quarter hours, not in
+hours. So, if you want to set a total duration of e. g. five hours, the correct value for this
+variable would be `20` in this mode.
+
 ## 3.2 (2025-09-02)
 
 This is an important release and updating to it as soon as possible is strongly recommended for the

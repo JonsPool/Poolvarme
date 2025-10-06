@@ -1,18 +1,9 @@
 # Spot-Price Based Control of Shelly Devices
 
-**NOTE: IF YOU ARE USING VERSION 3.1 OR EARLIER, UPGRADE TO VERSION 3.2 AS SOON AS POSSIBLE. SEE
-THE CHANGELOG FOR DETAILS.**
-
 ## Introduction
 
-**Note:
-On October 1, 2025, energy trading on the European energy exchanges will switch from
-60-minute-intervals to 15-minute intervals. For the time being, this script determines the hourly
-prices by calculating the average price for each hour from the 15-minute prices. Full support for
-15-minute prices will likely follow at a later time.**
-
-This script uses EPEX spot hourly energy prices to control the power output of a Shelly device. It
-runs directly on the Shelly and the only technical requirement is that the Shelly has access to the
+This script uses EPEX spot energy prices to control the power output of a Shelly device. It runs
+directly on the Shelly and the only technical requirement is that the Shelly has access to the
 internet. The script should run on all Gen2+ Shelly switches.
 
 The goal of the script is to activate power output when prices are at their lowest during a
@@ -38,6 +29,8 @@ The calculated results can be reviewed and modified on the Web UI that is provid
 
 There are some additional features:
 
+- The script can either work with hourly or 15-minute prices. Choose the mode that matches the
+  contract that you have with your supplier.
 - If price data can not be downloaded due to technical issues, the script provides an optional
   fallback mode to ensure that power is provided for the configured number of hours.
 - You can define a hard price limit (e.g. 10 cent/kWh) that must not be exceeded. If the price
@@ -50,8 +43,8 @@ There are some additional features:
   be controlled by the script.
 
 Note:
-The hourly prices are provided by [energy-charts.info](https://energy-charts.info), an organization
-that generously offers unrestricted access to their EPEX market price API. The license under which
+The prices are provided by [energy-charts.info](https://energy-charts.info), an organization that
+generously offers unrestricted access to their EPEX market price API. The license under which
 price data is made available depends on your location - see
 [the API documentation](https://api.energy-charts.info/#/prices) for details.
 
@@ -101,37 +94,54 @@ of the available zones can be found in the
 
 The code of the bidding zone must be entered exactly as shown (capitalization is important!).
 
-### switchOnDuration (default `4`)
+### hourMode (default `true`)
 
-The script switches on power for the number of hours that is defined in this variable. Depending
-on the setting of the `blockMode` variable (see below), power is either activated in one
-contiguous block or spread out over the time window (depending on the prices).
+This variable defines if the script should work with hourly or 15-minute prices.
 
-The switchOnDuration must be a whole number in the range of 1 to 24.
+When set to `true` (the default), the script calculates and displays switch times for full hours
+only (based on the average price for each hour).
 
-### timeWindowStartHour & timeWindowEndHour (default `7` & `19`)
+When set to `false`, switch times are calculated and displayed based on quarter hours. All script
+features like time windows, block mode and price limits work as expected and the WebUI timetable
+allows manual modifications for each quarter hour. There is, however, one difference in the setup
+of the script:
 
-These two variables define the time window within which the cheapest hours are found. The
-default time window is 7:00 to 19:00.<br><br>
-Both values must be whole numbers in the range of 0 to 23. If you want the time window to match the
-calendar day, set both values to zero.<br><br>
-The `timeWindowEndHour`must be greater than the `timeWindowStartHour` or `0` if you want to end
-the time window exactly at 0:00.
+In 15-minute mode, the `switchOnDuration` variable defines the duration in quarter hours, not in
+hours. So, if you want to set a total duration of e. g. five hours, the correct value for this
+variable would be `20`.
 
 ### blockMode (default `true`)
 
 This sets the basic operating mode of the script. Two modes are supported:
 
 If `blockMode` is set to `true`, the script switches on power for the block of `switchOnDuration`
-consecutive hours with the lowest average price within the defined time window.
+consecutive (quarter) hours with the lowest average price within the defined time window.
 
 If `blockMode` is set to `false`, the script switches on power for the cheapest `switchOnDuration`
-hours within the time window, even if these hours do not form a contiguous block.
+(quarter) hours within the time window, even if they do not form a contiguous block.
+
+### switchOnDuration (default `4`)
+
+The script switches on power for the number of (quarter) hours that is defined in this variable.
+Depending on the setting of the `blockMode` variable (see below), power is either activated in one
+contiguous block or spread out over the time window (depending on the prices).
+
+The switchOnDuration must be a whole number in the range of 1 to 24 (in hourly mode) or 1 to 96 (in
+15-minute mode).
+
+### timeWindowStartHour & timeWindowEndHour (default `7` & `19`)
+
+These two variables define the time window within which the cheapest (quarter) hours are found.
+The default time window is 7:00 to 19:00.<br><br>
+Both values must be whole numbers in the range of 0 to 23. If you want the time window to match the
+calendar day, set both values to zero.<br><br>
+The `timeWindowEndHour`must be greater than the `timeWindowStartHour` or `0` if you want to end
+the time window exactly at 0:00.
 
 ### priceLimit (default `Infinity`)
 
 This variable defines a price limit which is expressed in cent per kWh. Power is not switched
-on for hours with prices that are higher than this limit.
+on for (quarter) hours with prices that are higher than this limit.
 
 The price limit can have decimals - e.g. a value of 10.5 cent is perfectly fine. The default value
 of `Infinity` means that there is no price limit.
@@ -146,9 +156,9 @@ of 20 minutes until it has completed successfully.
 If all retrieval attempts fail until approximately 15 minutes before midnight, the script stops
 the retrieval process and the `useFallback` setting determines what happens next:
 
-If `useFallback` is `true`, the script uses statistical prices to calculate the active hours for
-the next day. These prices are the average hourly prices of the Austrian and German market for the
-year 2024.
+If `useFallback` is `true`, the script uses statistical prices to calculate the active (quarter)
+hours for the next day. These prices are the average prices of the Austrian and German market for
+the year 2024.
 
 If `useFallback` is `false`, no calculation takes place for the day in question.
 
