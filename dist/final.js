@@ -138,7 +138,7 @@ function prcP(res, errc, errm, strt) {
   if (anch === 0) anch = strt;
 
   let wsix = dsix + timeWindowStartHour * mult;
-  let weix = timeWindowEndHour ? prc.length : prc.length - (24 * mult - timeWindowEndHour * mult);
+  let weix = timeWindowEndHour ? prc.length - (24 * mult - timeWindowEndHour * mult) : prc.length;
   let dur = Math.min(switchOnDuration, weix - wsix);
 
   if (blockMode) {
