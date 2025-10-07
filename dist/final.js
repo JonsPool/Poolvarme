@@ -136,11 +136,10 @@ function prcP(res, errc, errm, strt) {
   }
 
   if (anch === 0) anch = strt;
-  on.length = prc.length;
 
   let wsix = dsix + timeWindowStartHour * mult;
-  let weix = timeWindowEndHour === 0 ? prc.length : prc.length - (24 - timeWindowEndHour * mult);
-  let dur = Math.min(switchOnDuration, prc.length - dsix);
+  let weix = timeWindowEndHour ? prc.length : prc.length - (24 * mult - timeWindowEndHour * mult);
+  let dur = Math.min(switchOnDuration, weix - wsix);
 
   if (blockMode) {
     let sidx = 0;
