@@ -1,5 +1,5 @@
-// Spotelly Version 3.3
-// This script uses EPEX spot hourly energy prices to control the power output of a Shelly device.
+// Spotelly Version 3.4
+// This script uses EPEX spot energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
 // This script uses price data from http://energy-charts.info
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4 (2025-10-07)
+
+This is a bugfix release that resolves one issue:
+
+- **Fixed:** Wrong calculation in 15-minute mode if the time window ends before midnight.
+
 ## 3.3 (2025-10-06)
 
 This release adds full support for 15-minute prices. Since many contracts continue to work with
