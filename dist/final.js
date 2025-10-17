@@ -75,15 +75,21 @@ function set(val) {
 
 function getP() {
   let now = new Date();
-  let strt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
-  let qry = "&start=" + strt / 1000 + "&end=" + 9999999999;
+  let strt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  let year = strt.getFullYear().toString();
+  let month = (strt.getMonth() + 1).toString();
+  let day = strt.getDate().toString();
+  let parm = [
+    year,
+    "-",
+    month.length === 1 ? "0" + month : month,
+    "-",
+    month.day === 1 ? "0" + day : day,
+  ].join("");
 
-  Shelly.call(
-    "http.get",
-    { url: "https://api.energy-charts.info/price?bzn=" + epexBZN + qry },
-    prcP,
-    strt,
-  );
+  let url = "https://api.energy-charts.info/price?bzn=" + epexBZN + "&start=" + parm;
+
+  Shelly.call("http.get", { url: url }, prcP, strt.getTime());
 }
 
 function prcP(res, errc, errm, strt) {
