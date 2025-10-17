@@ -1,4 +1,4 @@
-// Spotelly Version 3.4
+// Spotelly Version 3.5
 // This script uses EPEX spot energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
 // This script uses price data from http://energy-charts.info
@@ -22,6 +22,7 @@ function priceModifier(spotPrice) {
 }
 
 let switchID = 0; // set the switch ID for multi-switch devices
+let invertSwitch = false; // if true, switch will be OFF for cheapest hours and ON for the rest
 
 let telegramActive = false; // set to true to activate the Telegram feature
 
@@ -61,6 +62,7 @@ function log(msg, sendTelegram) {
 }
 
 function set(val) {
+  if (invertSwitch) val = !val;
   if (Shelly.getComponentStatus("switch", switchID).output === val) return;
   let msg = val ? "ON." : "OFF.";
   let flag = val ? sendPowerOn : sendPowerOff;

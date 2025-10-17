@@ -194,6 +194,14 @@ This setting sets the switch ID for Shelly devices with multiple switches (like 
 a device with only one switch, the ID is always `0`. Each instance of the script can only control
 a single switch.
 
+### invertSwitch (default `false`)
+This setting can invert the switching logic which is useful for some electrical configurations:
+
+When set to `false`, the script turns the switch ON for the selected (cheapest) hours and OFF for
+the remaining hours.<br>
+When set to `true`, the script turns the switch OFF for the selected (cheapest) hours and ON for
+the remaining hours.
+
 ### telegramActive (default `false`)
 
 Set this to `true` to activate the Telegram feature. In order to use this feature, you need to have

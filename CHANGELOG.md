@@ -1,5 +1,25 @@
 # Changelog
 
+## 3.5 (2025-10-18)
+
+This release contains two changes:
+
+- **Changed: Price Retrieval**<br>
+  As the price API sometimes delivers too many and/or erroneous price records especially for the
+  Austrian market, the retrieval logic was slightly changed to try to compensate for that. This
+  change should prevent the API from delivering more than 96 prices for a day (although I can not
+  guarantee that since the API is not under my control).
+- **New: Invert Switch**<br>
+  A new configuration variable `invertSwitch` is available, which makes it possible to change the
+  switching behavior of the script (useful for some electrical configurations):
+  - When set to `false` (the default), the script turns the switch ON for the selected (cheapest)
+    hours and OFF for the remaining hours.
+  - When set to `true`, the script turns the switch OFF for the selected (cheapest) hours and ON for
+    the remaining hours.
+
+  Note: This change has no impact on the WebUI, which will always show ON for the selected
+  (cheapest) and OFF for the remaining hours.
+
 ## 3.4 (2025-10-07)
 
 This is a bugfix release that resolves one issue:
