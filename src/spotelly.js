@@ -84,7 +84,7 @@ function getP() {
     "-",
     month.length === 1 ? "0" + month : month,
     "-",
-    month.day === 1 ? "0" + day : day,
+    day.length === 1 ? "0" + day : day,
   ].join("");
 
   let url = "https://api.energy-charts.info/price?bzn=" + epexBZN + "&start=" + parm;
