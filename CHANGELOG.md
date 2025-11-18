@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.6 (2025-11-18)
+
+This release enhances the `priceModifier` function so that it can be used to calculate date- or
+time-dependent price variations (like variable grid fees which have become more widespread in many
+European countries).
+
+With this version, the script will pass both the price value and the date and time for each price
+into the `priceModifier` function. An example on how this can be used:
+
+A grid operator charges different grid fees depending on the time of day:
+
+- The fee is 10 ct/kWh during the peak hours from 7:00 to 9:00 and 18:00 to 20:00.
+- For the remainder of the day, the fee is 8 ct/kWh.
+
+The `priceModifier` can be modified like so to add these fees to the EPEX price:
+
+```javascript
+function priceModifier(datetime, spotPrice) {
+  let hour = datetime.getHours(); // extract hour from the datetime
+  if (hour === 7 || hour === 8 || hour === 18 || hour === 19) {
+    return spotPrice + 10; // peak hour - add 10 cent to the EPEX price
+  }
+  return spotPrice + 8; // normal hour - add 8 cent to the EPEX price
+}
+```
+
+These modified prices are then used by the price analysis algorithm to determine the cheapest
+hours of the day.
+
+Note that the WebUI will display these modified prices (and not just the pure EPEX price) when this
+feature is used.
+
 ## 3.5 (2025-10-18)
 
 This release contains two changes:

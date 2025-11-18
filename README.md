@@ -164,25 +164,36 @@ If `useFallback` is `false`, no calculation takes place for the day in question.
 
 ### `priceModifier`
 
-Generally, the script calculates with and displays EPEX spot prices. However, this is usually not
-the price that has to be paid to the electricity supplier - many suppliers add a markup to the
-spot price and taxes like VAT are added on top of that.
+By default, the script calculates with and displays EPEX spot prices. There are, however, many
+other components on your invoice that are added to this price like fees and taxes. And some of these
+components may be variable, for example grid fees that vary by time of day or time of year.
 
-By changing the priceModifier function, you can define a formula that converts the EPEX market rate
-to the price that you actually have to pay to your supplier.
+By changing the `priceModifier` function, you can write your own logic that adds your individual
+components to the EPEX price and this modified price is then used by the script to determine the
+cheapest hours. An example:
 
-Example: An Austrian electricity supplier charges a markup of 1.3 cents per kWh to the EPEX rate and
-the Austrian VAT of 20 % is added on top of that. In order to display this price in the script, you
-would change the `priceModifier` as follows:
+A grid operator charges different grid fees depending on the time of day:
+
+- The fee is 10 ct/kWh during the peak hours from 7:00 to 9:00 and 18:00 to 20:00.
+- For the remainder of the day, the fee is 8 ct/kWh.
+
+The `priceModifier` function can be modified like so to add these fees to the EPEX price:
 
 ```javascript
-function priceModifier(spotPrice) {
-  return (spotPrice + 1.3) * 1.2;
+function priceModifier(datetime, spotPrice) {
+  let hour = datetime.getHours(); // extract hour from the datetime
+  if (hour === 7 || hour === 8 || hour === 18 || hour === 19) {
+    return spotPrice + 10; // peak hour - add 10 cent to the EPEX price
+  }
+  return spotPrice + 8; // normal hour - add 8 cent to the EPEX price
 }
 ```
 
-The formula can be as complex as you need it to be - just make sure that the expression after the
-`return` statement always returns a number. The resulting value will be rounded to two decimal
+These modified prices are then used by the price analysis algorithm to determine the cheapest
+hours of the day.
+
+The algorithm can be as complex as you need it to be - just make sure that the expression after the
+`return` statement(s) always returns a number. The resulting value will be rounded to two decimal
 positions when it is displayed on the Web UI.
 
 Note: Even if you do not use this feature, do NOT remove this function - the script will not work
@@ -195,6 +206,7 @@ a device with only one switch, the ID is always `0`. Each instance of the script
 a single switch.
 
 ### invertSwitch (default `false`)
+
 This setting can invert the switching logic which is useful for some electrical configurations:
 
 When set to `false`, the script turns the switch ON for the selected (cheapest) hours and OFF for

@@ -1,4 +1,4 @@
-// Spotelly Version 3.5
+// Spotelly Version 3.6
 // This script uses EPEX spot energy prices to control the power output of a Shelly device.
 // See https://github.com/towiat/spotelly for the full documentation.
 // This script uses price data from http://energy-charts.info
@@ -17,7 +17,7 @@ let priceLimit = Infinity; // in cent/kWh
 let useFallback = true; // if true, use fallback when price retrieval fails
 
 // change this function to display prices according to the conditions of your contract
-function priceModifier(spotPrice) {
+function priceModifier(datetime, spotPrice) {
   return spotPrice; // spotPrice is in cent/kWh
 }
 
@@ -98,6 +98,7 @@ function prcP(res, errc, errm, strt) {
   let fbm = false;
   let dsix = prc.length;
   let mult = hourMode ? 1 : 4;
+  let dt = strt;
 
   let err = "";
   if (errc !== 0) {
@@ -115,11 +116,13 @@ function prcP(res, errc, errm, strt) {
       for (let i = 0; i < prcs.length; i += 4) {
         let psum = 0;
         for (let j = i; j < i + 4; j++) psum += prcs[j] / 10;
-        prc.push(priceModifier(parseFloat((psum / 4).toFixed(3))));
+        prc.push(priceModifier(new Date(dt), parseFloat((psum / 4).toFixed(3))));
+        dt += intv;
       }
     } else {
       for (let p of prcs) {
-        prc.push(priceModifier(p / 10));
+        prc.push(priceModifier(new Date(dt), p / 10));
+        dt += intv;
       }
     }
   }
@@ -140,7 +143,10 @@ function prcP(res, errc, errm, strt) {
       7.56, 6.98, 6.73, 6.53, 6.63, 7.33, 8.97, 10.16, 9.74, 8.21, 6.87, 6.0, 5.35, 5.02, 5.28,
       6.38, 7.85, 9.75, 11.16, 12.1, 11.58, 10.02, 9.01, 7.97,
     ])
-      for (let i = 0; i < mult; i++) prc.push(p); // if not in hourMode, push each price 4 times
+      for (let i = 0; i < mult; i++) {
+        prc.push(priceModifier(new Date(dt), p)); // if not in hourMode, push each price 4 times
+        dt += intv;
+      }
   }
 
   if (anch === 0) anch = strt;
