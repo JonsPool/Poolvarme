@@ -41,7 +41,7 @@ let on = [];
 let anch = 0;
 let rOff = Math.ceil(Math.random() * 300000);
 let timH = undefined;
-let html = atob("{{ html }}"); // placeholder for compressed html - used by build script
+let html = atob("{{ endpoint.html }}"); // placeholder for compressed endpoint.html
 let intv = hourMode ? 3_600_000 : 900_000;
 
 function next() {
