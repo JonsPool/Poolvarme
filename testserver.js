@@ -4,6 +4,7 @@ developing and testing endpoint.html. The browser view is automatically refreshe
 endpoint.html is modified.
 
 Start with 'npm run dev'.
+Note that endpoint.html cannot be opened in VS simultaneously as checking it in the browser.
 */
 
 import { readFile, watch } from "fs/promises";
@@ -16,7 +17,7 @@ const wsPort = 3001;
 const htmlPath = "./src/endpoint.html";
 
 const data = {
-  a: 1754690400000,
+  a: 1771801200000,                     // date and time in ms. Here 2026-02-23. T0 is 1970-01-01 00:00
   n: 0,
   s: 0,
   p: [

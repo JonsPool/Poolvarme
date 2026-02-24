@@ -8,7 +8,7 @@
 let epexBZN = "AT"; // EPEX Bidding Zone - see documentation for valid codes
 
 let hourMode = true; // true for hourly, false for quarter-hourly calculation
-let blockMode = true; // set calculation mode
+let blockMode = false; // set calculation mode. True for a consequative duration, false to allow for several, spread out durations
 
 let switchOnDuration = 4; // hours if hourMode is true, else quarter hours
 let timeWindowStartHour = 7; // minimum 0, maximum 23
@@ -24,7 +24,7 @@ function priceModifier(datetime, spotPrice) {
 let switchID = 0; // set the switch ID for multi-switch devices
 let invertSwitch = false; // if true, switch will be OFF for cheapest hours and ON for the rest
 
-let telegramActive = false; // set to true to activate the Telegram feature
+let telegramActive = false; // set to true to activate the Telegram feature. This feature provides messages when the price table was updated and whenever power was turned ON/OFF
 
 // the following settings have no effect when telegramActive is false
 let telegramToken = ""; // must be set when telegramActive is true
@@ -83,13 +83,15 @@ function getP() {
   let day = strt.getDate().toString();
   let parm = [
     year,
-    "-",
+      "-",
+    // "/",
     month.length === 1 ? "0" + month : month,
     "-",
     day.length === 1 ? "0" + day : day,
   ].join("");
 
-  let url = "https://api.energy-charts.info/price?bzn=" + epexBZN + "&start=" + parm;
+    let url = "https://api.energy-charts.info/price?bzn=" + epexBZN + "&start=" + parm;
+    //let url = "https://se.elpris.eu/api/v1/prices/" + parm + "_SE3.json?avg24";
 
   Shelly.call("http.get", { url: url }, prcP, strt.getTime());
 }
@@ -107,8 +109,9 @@ function prcP(res, errc, errm, strt) {
     err = "Server error " + res.code + "/" + res.message;
   } else {
     delete res.headers; // free up RAM to reduce peak memory usage
-    let pstr = res.body.indexOf('"price":') + 8;
-    let pend = res.body.indexOf("]", pstr) + 1;
+      let pstr = res.body.indexOf('"price":') + 8;
+      // let pstr = res.body.indexOf('96,"p":') + 7;
+    let pend = res.body.indexOf("]", pstr) + 1;           // last position
     res.body = res.body.substring(pstr, pend);
     let prcs = JSON.parse(res.body);
     delete res.body;
